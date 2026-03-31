@@ -1792,10 +1792,17 @@
     }
 
     async function deleteQA(id, el) {
-        el.closest('.qa-item').remove();
+        const item = el.closest('.qa-item');
+        item.style.opacity = '0.3';
+        const { error } = await supaClient.from('perguntas').delete().eq('id', id);
+        if (error) {
+            console.error('Erro ao deletar pergunta:', error);
+            item.style.opacity = '1';
+            return;
+        }
+        item.remove();
         qaCount = Math.max(0, qaCount - 1);
         document.getElementById('qa-count').textContent = qaCount;
-        try { await supaClient.from('perguntas').update({ visivel: false }).eq('id', id); } catch(e) {}
     }
 
     function addQAItem(p) {
@@ -1815,7 +1822,7 @@
 
     // Load existing questions
     (async () => {
-        const { data } = await supaClient.from('perguntas').select('*').eq('visivel', true).order('created_at', { ascending: false });
+        const { data } = await supaClient.from('perguntas').select('*').order('created_at', { ascending: false });
         if (data && data.length) {
             lastQAId = data[0].id;
             data.reverse().forEach(addQAItem);
