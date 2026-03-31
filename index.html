@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMAD — Meetup IA [WeHandle]</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --purple: #667eea;
+            --violet: #764ba2;
+            --pink: #f093fb;
+            --dark: #07070f;
+            --dark2: #0c0c18;
+            --text: #e0e0e0;
+            --muted: #555;
+            --dim: #888;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ── SLIDE SYSTEM ── */
+        .slides-wrapper { position: relative; width: 100%; height: 100%; }
+
+        .slide {
+            position: absolute;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 48px 80px 100px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(50px);
+            transition: all 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .slide.active  { opacity: 1; visibility: visible; transform: translateX(0); }
+        .slide.prev    { opacity: 0; transform: translateX(-50px); }
+        .slide.centered { align-items: center; justify-content: center; }
+
+        /* ── TYPOGRAPHY ── */
+        .label {
+            font-size: 0.72rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 4px;
+            color: var(--purple); margin-bottom: 10px;
+        }
+        .title {
+            font-size: 3.8rem; font-weight: 700;
+            letter-spacing: -2px; line-height: 1.05;
+            margin-bottom: 28px;
+        }
+        .grad {
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── SLIDE 3 COMPACTNESS ── */
+        #s3 .wf-card { padding: 14px 16px; }
+        #s3 .wf-grid-3 { gap: 10px; }
+        #s3 .title { font-size: 2.8rem; margin-bottom: 4px; }
+
+        /* ── PROGRESS BAR ── */
+        .progress-line {
+            position: fixed; top: 0; left: 0; height: 2px;
+            background: linear-gradient(90deg, var(--purple), var(--pink));
+            transition: width 0.5s ease; z-index: 1000;
+        }
+
+        /* ── NAVIGATION PILL ── */
+        .nav-pill {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 14px;
+            background: rgba(10,10,20,0.85);
+            border: 1px solid rgba(102,126,234,0.25);
+            border-radius: 50px; padding: 8px 18px;
+            backdrop-filter: blur(20px); z-index: 1000;
+        }
+        .nav-btn {
+            background: none; border: none; color: rgba(255,255,255,0.5);
+            cursor: pointer; font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8rem; padding: 4px 10px; border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: rgba(102,126,234,0.2); color: white; }
+        .nav-dots { display: flex; gap: 6px; align-items: center; }
+        .nav-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,0.15); cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-dot.active { background: var(--purple); width: 18px; border-radius: 3px; }
+        .slide-counter {
+            font-size: 0.7rem; color: var(--muted);
+            font-family: 'Space Mono', monospace; min-width: 36px;
+        }
+
+        /* ══════════════════════════════
+           SLIDE 1 — INTRO
+        ══════════════════════════════ */
+        #s1 { background: var(--dark); }
+        #s1 canvas { position: absolute; inset: 0; pointer-events: none; }
+
+        .intro-wrap {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center;
+        }
+        .intro-eyebrow {
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 6px;
+            text-transform: uppercase; color: var(--purple);
+            opacity: 0; animation: fadeUp 0.7s ease 0.2s forwards;
+            margin-bottom: 16px;
+        }
+        .intro-title {
+            font-size: 11rem; font-weight: 700; letter-spacing: -8px;
+            line-height: 1;
+            background: linear-gradient(135deg, #a78bfa 0%, var(--purple) 35%, var(--pink) 70%, var(--violet) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; background-size: 300% 300%;
+            animation: gradDrift 4s ease-in-out infinite, scaleIn 0.9s cubic-bezier(0.34,1.56,0.64,1) forwards;
+            opacity: 0;
+        }
+        .intro-sub {
+            font-size: 1.25rem; color: var(--dim); margin-top: 18px; letter-spacing: 0.3px;
+            opacity: 0; animation: fadeUp 0.7s ease 0.8s forwards;
+        }
+        .intro-badge {
+            margin-top: 52px; font-size: 0.88rem; color: rgba(160,160,255,0.8);
+            background: rgba(102,126,234,0.12);
+            border: 1px solid rgba(102,126,234,0.28);
+            padding: 10px 28px; border-radius: 30px;
+            opacity: 0; animation: fadeUp 0.7s ease 1.2s forwards;
+        }
+
+        @keyframes scaleIn { from { opacity:0; transform:scale(0.6); } to { opacity:1; transform:scale(1); } }
+        @keyframes fadeUp  { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes gradDrift { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+
+        /* ══════════════════════════════
+           SLIDE 2 — O QUE É BMAD
+        ══════════════════════════════ */
+        #s2 { background: var(--dark2); }
+
+        .two-col {
+            display: grid; grid-template-columns: 1fr 1.15fr;
+            gap: 56px; width: 100%; max-width: 1200px;
+            margin: 0 auto; align-items: center;
+        }
+
+        .bmad-desc {
+            font-size: 1.1rem; line-height: 1.75;
+            color: var(--dim); margin-bottom: 32px;
+        }
+
+        .stats-2x2 {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+            margin-bottom: 28px;
+        }
+        .stat-box {
+            padding: 18px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+        }
+        .stat-box .n {
+            font-size: 3.2rem; font-weight: 700;
+            font-family: 'Space Mono', monospace; line-height: 1;
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-box .l {
+            font-size: 0.72rem; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 2px; margin-top: 4px;
+        }
+
+        .karpathy {
+            padding: 16px 20px;
+            background: rgba(240,147,251,0.05);
+            border-left: 3px solid rgba(240,147,251,0.4);
+            border-radius: 0 12px 12px 0;
+            font-style: italic; color: var(--dim);
+            font-size: 0.9rem; line-height: 1.6;
+        }
+        .karpathy strong { color: var(--purple); font-style: normal; }
+
+        .agents-grid-4 {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            margin-bottom: 18px;
+        }
+        .ag {
+            aspect-ratio: 1;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 5px;
+            background: rgba(102,126,234,0.07);
+            border: 1px solid rgba(102,126,234,0.13);
+            border-radius: 14px; transition: all 0.3s;
+        }
+        .ag:hover, .ag.ag-hl {
+            background: rgba(102,126,234,0.18);
+            border-color: rgba(102,126,234,0.45);
+            transform: scale(1.07);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.2);
+        }
+        .ag.ag-hl {
+            box-shadow: 0 0 24px rgba(102,126,234,0.35), 0 6px 20px rgba(102,126,234,0.2);
+        }
+        .ag .ic { font-size: 1.7rem; }
+        .ag .nm { font-size: 0.65rem; color: var(--dim); font-weight: 600; }
+
+        .scale-box {
+            padding: 14px 18px;
+            background: rgba(102,126,234,0.07);
+            border: 1px solid rgba(102,126,234,0.18); border-radius: 12px;
+        }
+        .scale-box .label { margin-bottom: 5px; }
+        .scale-box p { font-size: 0.83rem; color: var(--dim); line-height: 1.5; }
+
+        /* ══════════════════════════════
+           SLIDE 3 — WORKFLOWS
+        ══════════════════════════════ */
+        #s3 { align-items: center; }
+
+        .wf-grid-3 {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; width: 100%; max-width: 1000px;
+        }
+        .wf-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 18px; padding: 18px;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            position: relative; overflow: hidden; cursor: default;
+        }
+        .wf-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .wf-card:hover { border-color: rgba(102,126,234,0.4); transform: translateY(-5px); box-shadow: 0 14px 36px rgba(102,126,234,0.18); }
+        .wf-card:hover::after { opacity: 1; }
+        .wf-head { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+        .wf-icon { font-size: 1.3rem; }
+        .wf-name { font-size: 0.9rem; font-weight: 700; color: var(--pink); }
+        .wf-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+        .wf-tag {
+            padding: 3px 8px; background: rgba(102,126,234,0.1);
+            border: 1px solid transparent;
+            border-radius: 6px; font-size: 0.63rem; color: #999;
+            transition: all 0.2s;
+        }
+        .wf-tag:hover, .wf-tag.ag-hl { background: rgba(240,147,251,0.18); border-color: rgba(240,147,251,0.3); color: #fff; }
+        .wf-tag.ag-hl { box-shadow: 0 0 12px rgba(240,147,251,0.25); }
+        .wf-footer {
+            margin-top: 10px; padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.68rem; color: var(--purple); font-style: italic;
+            opacity: 0; transform: translateY(6px); transition: all 0.3s;
+        }
+        .wf-card:hover .wf-footer { opacity: 1; transform: translateY(0); }
+
+        /* ══════════════════════════════
+           SLIDE 4 — FRAMEWORKS
+        ══════════════════════════════ */
+        #s4 { background: var(--dark2); }
+
+        .fw-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 16px; margin-top: 26px; width: 100%; max-width: 860px;
+        }
+        .fw-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 18px; padding: 22px;
+            transition: all 0.3s; position: relative;
+        }
+        .fw-card.star {
+            background: rgba(102,126,234,0.08);
+            border-color: rgba(102,126,234,0.35);
+        }
+        .fw-card.star::before {
+            content: '★ Featured';
+            position: absolute; top: 12px; right: 12px;
+            font-size: 0.6rem; font-weight: 700; color: var(--purple);
+            background: rgba(102,126,234,0.18);
+            padding: 2px 8px; border-radius: 4px; letter-spacing: 1px;
+        }
+        .fw-card:hover { transform: translateY(-5px); border-color: rgba(102,126,234,0.35); box-shadow: 0 10px 28px rgba(102,126,234,0.15); }
+        .fw-name { font-size: 1.35rem; font-weight: 700; color: white; margin-bottom: 4px; }
+        .fw-type { font-size: 0.7rem; color: var(--purple); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+        .fw-desc { font-size: 0.85rem; color: var(--dim); line-height: 1.5; }
+
+        /* ══════════════════════════════
+           SLIDE 5 — 8 NÍVEIS (was s7)
+        ══════════════════════════════ */
+        #s5 { align-items: center; }
+
+        /* ══════════════════════════════
+           SLIDE 7 — EVOLUÇÃO (antes/atual/depois)
+        ══════════════════════════════ */
+        .evo-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 18px; width: 100%; max-width: 1150px; margin: 0 auto;
+        }
+        .evo-col {
+            border-radius: 18px; padding: 26px 22px;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .evo-col::before {
+            content: ''; position: absolute; top:0;left:0;right:0; height: 3px;
+        }
+        .evo-col.evo-old {
+            background: rgba(80,80,100,0.12);
+            border: 1px solid rgba(100,100,120,0.18);
+        }
+        .evo-col.evo-old::before { background: linear-gradient(90deg,#555,#777); }
+        .evo-col.evo-vibe {
+            background: rgba(255,60,60,0.05);
+            border: 1px solid rgba(255,80,80,0.2);
+        }
+        .evo-col.evo-vibe::before { background: linear-gradient(90deg,#ff4444,#ff8844); }
+        .evo-col.evo-fw {
+            background: rgba(102,126,234,0.08);
+            border: 1px solid rgba(102,126,234,0.3);
+        }
+        .evo-col.evo-fw::before { background: linear-gradient(90deg,var(--purple),var(--pink)); }
+
+        .evo-era {
+            font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 3px; margin-bottom: 4px;
+        }
+        .evo-old .evo-era { color: #777; }
+        .evo-vibe .evo-era { color: #ff7766; }
+        .evo-fw .evo-era { color: var(--purple); }
+
+        .evo-title {
+            font-size: 1.6rem; font-weight: 700; color: white;
+            margin-bottom: 16px; line-height: 1.15;
+        }
+        .evo-stats { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .evo-stat {
+            display: flex; align-items: baseline; gap: 10px;
+        }
+        .evo-val {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700; font-size: 1.15rem;
+            flex-shrink: 0; min-width: 60px;
+        }
+        .evo-old .evo-val { color: #888; }
+        .evo-vibe .evo-val { color: #ff7766; }
+        .evo-fw .evo-val { color: #7de87d; }
+        .evo-lbl { font-size: 0.78rem; color: var(--dim); line-height: 1.35; }
+        .evo-src {
+            font-size: 0.58rem; color: rgba(255,255,255,0.2);
+            margin-top: auto; padding-top: 14px;
+        }
+
+        /* ══════════════════════════════
+           SLIDE 6 — HARNESS ENGINEERING
+        ══════════════════════════════ */
+        #s6 { background: var(--dark2); }
+
+        .harness-cols {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 44px; width: 100%; max-width: 1200px;
+            margin: 0 auto; align-items: start;
+        }
+        .big-quote {
+            padding: 22px 26px;
+            background: rgba(102,126,234,0.06);
+            border-left: 3px solid var(--purple);
+            border-radius: 0 14px 14px 0;
+            font-style: italic; color: #ccc; line-height: 1.65;
+            font-size: 1rem; margin-bottom: 16px;
+        }
+        .big-quote .qauthor {
+            font-size: 0.78rem; color: var(--purple);
+            font-style: normal; margin-top: 10px;
+        }
+
+        .not-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+        .not-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 14px;
+            background: rgba(255,80,80,0.05);
+            border: 1px solid rgba(255,80,80,0.12);
+            border-radius: 9px; font-size: 0.87rem; color: #aaa;
+        }
+        .is-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .is-card {
+            padding: 16px; background: rgba(102,126,234,0.07);
+            border: 1px solid rgba(102,126,234,0.18); border-radius: 12px;
+        }
+        .is-card h4 { font-size: 0.85rem; color: var(--purple); margin-bottom: 5px; }
+        .is-card p  { font-size: 0.78rem; color: var(--dim); line-height: 1.4; }
+
+        /* ══════════════════════════════
+           STAIRCASE (shared CSS)
+        ══════════════════════════════ */
+
+        .staircase-v2 {
+            display: flex; flex-direction: column; gap: 5px;
+            width: 100%; max-width: 860px; margin: 18px 0 14px;
+        }
+        /* Rendered 8→1 in HTML so 8 is at top visually */
+        .stair {
+            height: 38px; border-radius: 8px;
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 16px; position: relative;
+            transition: filter 0.2s, transform 0.2s;
+            width: 380px; flex-shrink: 0;
+        }
+        .stair-8 { margin-left: 420px; }
+        .stair-7 { margin-left: 360px; }
+        .stair-6 { margin-left: 300px; }
+        .stair-5 { margin-left: 240px; }
+        .stair-4 { margin-left: 180px; }
+        .stair-3 { margin-left: 120px; }
+        .stair-2 { margin-left: 60px;  }
+        .stair-1 { margin-left: 0;     }
+
+        /* pre-BMAD zone */
+        .stair-1 { background: rgba(80,90,130,0.28); border: 1px solid rgba(100,110,160,0.18); }
+        .stair-2 { background: rgba(90,100,150,0.35); border: 1px solid rgba(110,120,180,0.25); }
+        /* BMAD zone */
+        .stair-3 { background: rgba(102,126,234,0.38); border: 1px solid rgba(102,126,234,0.45); }
+        .stair-4 { background: rgba(118,100,210,0.42); border: 1px solid rgba(120,100,210,0.5); }
+        .stair-5 { background: rgba(155,80,210,0.44);  border: 1px solid rgba(160,80,215,0.52); }
+        .stair-6 {
+            background: rgba(195,75,195,0.46);
+            border: 1px solid rgba(220,100,220,0.58);
+            box-shadow: 0 0 20px rgba(200,80,200,0.22);
+        }
+        /* beyond BMAD */
+        .stair-7 { background: rgba(55,55,75,0.32); border: 1px solid rgba(80,80,100,0.15); }
+        .stair-8 { background: rgba(45,45,60,0.28); border: 1px solid rgba(65,65,85,0.12); }
+
+        .stair:hover, .stair.ag-hl { filter: brightness(1.38); transform: scaleX(1.012); transform-origin: left; }
+        .stair.ag-hl { box-shadow: 0 0 18px rgba(102,126,234,0.3); }
+
+        .stair-num {
+            font-size: 0.68rem; font-weight: 700; font-family: 'Space Mono', monospace;
+            flex-shrink: 0; width: 14px;
+        }
+        .stair-1 .stair-num, .stair-2 .stair-num       { color: rgba(255,255,255,0.3); }
+        .stair-3 .stair-num, .stair-4 .stair-num,
+        .stair-5 .stair-num, .stair-6 .stair-num       { color: rgba(255,255,255,0.85); }
+        .stair-7 .stair-num, .stair-8 .stair-num       { color: rgba(255,255,255,0.2); }
+
+        .stair-label { font-size: 0.82rem; font-weight: 600; }
+        .stair-1 .stair-label, .stair-2 .stair-label   { color: rgba(255,255,255,0.38); }
+        .stair-3 .stair-label, .stair-4 .stair-label,
+        .stair-5 .stair-label, .stair-6 .stair-label   { color: rgba(255,255,255,0.95); }
+        .stair-7 .stair-label, .stair-8 .stair-label   { color: rgba(255,255,255,0.25); }
+
+        .stair-badge {
+            margin-left: auto; font-size: 0.58rem; font-weight: 700;
+            padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0;
+        }
+        .badge-base   { background: rgba(150,150,170,0.12); color: #777; border: 1px solid rgba(150,150,170,0.2); }
+        .badge-start  { background: rgba(100,220,100,0.15); color: #80e880; border: 1px solid rgba(100,200,100,0.28); }
+        .badge-end    { background: rgba(240,147,251,0.15); color: var(--pink); border: 1px solid rgba(240,147,251,0.32); }
+        .badge-beyond { background: rgba(80,80,80,0.12); color: #444; border: 1px solid rgba(80,80,80,0.18); font-size: 0.54rem; }
+
+        .levels-footer { text-align: center; font-size: 1rem; color: #888; margin-top: 2px; }
+        .levels-footer strong { font-size: 1.1rem; }
+
+        /* ══════════════════════════════
+           SLIDE 8 — CICLO
+        ══════════════════════════════ */
+        #s8 { background: var(--dark2); align-items: center; }
+
+        .ciclo-flow {
+            display: flex; align-items: flex-start;
+            justify-content: center; gap: 0;
+            margin: 28px 0; width: 100%; max-width: 1100px;
+        }
+        .ciclo-node { display: flex; flex-direction: column; align-items: center; width: 145px; flex-shrink: 0; }
+        .ciclo-circle {
+            width: 86px; height: 86px; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(102,126,234,0.12);
+            border: 2px solid rgba(102,126,234,0.28);
+            transition: all 0.3s; cursor: default;
+        }
+        .ciclo-node:nth-child(odd) .ciclo-circle {
+            background: rgba(240,147,251,0.08);
+            border-color: rgba(240,147,251,0.28);
+        }
+        .ciclo-circle:hover { transform: scale(1.12); box-shadow: 0 0 26px rgba(102,126,234,0.35); }
+        .ciclo-ic { font-size: 1.7rem; }
+        .ciclo-n { font-size: 0.62rem; color: var(--purple); font-weight: 700; letter-spacing: 1px; }
+        .ciclo-title { font-size: 0.82rem; font-weight: 600; color: white; margin: 8px 0 5px; }
+        .ciclo-tags { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+        .ciclo-tag { font-size: 0.59rem; color: #777; background: rgba(255,255,255,0.04); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+        .ciclo-arr {
+            font-size: 1.1rem; color: rgba(102,126,234,0.45); align-self: center;
+            flex-shrink: 0; animation: arrow 1.5s ease-in-out infinite;
+        }
+        @keyframes arrow { 0%,100%{opacity:.35;transform:translateX(0);} 50%{opacity:.9;transform:translateX(4px);} }
+
+        .qdev-banner {
+            display: inline-flex; align-items: center; gap: 12px;
+            background: rgba(240,147,251,0.08);
+            border: 1px solid rgba(240,147,251,0.28);
+            border-radius: 12px; padding: 13px 22px;
+            font-size: 0.88rem; color: #ddd; margin-top: 20px;
+        }
+        .qdev-ic { font-size: 1.5rem; animation: rocket 0.55s ease-in-out infinite alternate; }
+        @keyframes rocket { from{transform:rotate(-5deg) translateY(0);} to{transform:rotate(5deg) translateY(-3px);} }
+
+        /* ══════════════════════════════
+           SLIDE 9 — DEMONSTRAÇÃO
+        ══════════════════════════════ */
+        #s9 {}
+
+        .demo-cols {
+            display: grid; grid-template-columns: 1.1fr 1fr;
+            gap: 50px; width: 100%; max-width: 1100px;
+            margin: 20px auto 0; align-items: start;
+        }
+        .terminal {
+            background: #0a0a15;
+            border: 1px solid rgba(102,126,234,0.28);
+            border-radius: 14px; overflow: hidden;
+            font-family: 'Space Mono', monospace;
+        }
+        .t-bar {
+            background: rgba(255,255,255,0.04);
+            padding: 10px 14px; display: flex; align-items: center; gap: 7px;
+        }
+        .td { width: 10px; height: 10px; border-radius: 50%; }
+        .td.r{background:#ff5f57;} .td.y{background:#febc2e;} .td.g{background:#28c840;}
+        .t-ttl { flex: 1; text-align: center; font-size: 0.68rem; color: var(--muted); font-family: 'Space Grotesk', sans-serif; }
+        .t-body { padding: 22px; font-size: 0.88rem; line-height: 2; }
+        .t-prompt { color: var(--purple); }
+        .t-cmd    { color: #e0e0e0; }
+        .t-out    { color: var(--dim); font-size: 0.78rem; display: block; }
+        .t-hl     { color: var(--pink); }
+        .t-cur {
+            display: inline-block; width: 7px; height: 0.9em;
+            background: var(--purple); vertical-align: text-bottom; margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+        .checklist { display: flex; flex-direction: column; gap: 11px; }
+        .chk {
+            display: flex; align-items: center; gap: 13px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 11px; font-size: 0.88rem; color: #ccc;
+            transition: all 0.3s;
+        }
+        .chk:hover { background: rgba(102,126,234,0.1); border-color: rgba(102,126,234,0.3); transform: translateX(5px); }
+        .chk-n {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: rgba(102,126,234,0.18);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.68rem; color: var(--purple); font-weight: 700; flex-shrink: 0;
+            font-family: 'Space Mono', monospace;
+        }
+        .chk code { color: var(--pink); font-family: 'Space Mono', monospace; font-size: 0.82rem; }
+
+        /* ══════════════════════════════
+           SLIDE 8 — ARTIFACTS PANEL
+        ══════════════════════════════ */
+        /* Doc preview panel */
+        .doc-preview {
+            background: rgba(12,12,24,0.95);
+            border: 1px solid rgba(102,126,234,0.2);
+            border-radius: 14px; overflow: hidden;
+            height: 100%; min-height: 420px;
+            display: flex; flex-direction: column;
+        }
+        .doc-tab {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px;
+            background: rgba(102,126,234,0.08);
+            border-bottom: 1px solid rgba(102,126,234,0.15);
+            font-size: 0.68rem; font-family: 'Space Mono', monospace;
+            color: var(--purple);
+        }
+        .doc-tab .doc-icon { font-size: 0.9rem; }
+        .doc-body {
+            padding: 14px 18px; flex: 1;
+            overflow-y: auto; font-size: 0.72rem;
+            font-family: 'Space Mono', monospace;
+            line-height: 1.55; color: #aaa;
+            transition: opacity 0.3s;
+        }
+        .doc-body .dh1 { color: #fff; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; }
+        .doc-body .dh2 { color: var(--purple); font-size: 0.76rem; font-weight: 700; margin: 10px 0 4px; }
+        .doc-body .dh3 { color: #bbb; font-size: 0.72rem; font-weight: 600; margin: 8px 0 3px; }
+        .doc-body .dtbl { width: 100%; border-collapse: collapse; margin: 4px 0 8px; font-size: 0.65rem; }
+        .doc-body .dtbl td, .doc-body .dtbl th {
+            padding: 3px 8px; border: 1px solid rgba(102,126,234,0.15);
+            text-align: left;
+        }
+        .doc-body .dtbl th { background: rgba(102,126,234,0.08); color: var(--purple); }
+        .doc-body .dfr { color: #7de87d; }
+        .doc-body .dagent { color: var(--pink); font-weight: 600; }
+        .doc-body .dcheck { color: #7de87d; }
+        .doc-body .dfail { color: #ff6666; }
+        .doc-body .dscore { font-size: 1.1rem; font-weight: 700; color: #7de87d; }
+        .doc-body .dmeta { color: #555; font-size: 0.6rem; }
+        .doc-body::-webkit-scrollbar { width: 3px; }
+        .doc-body::-webkit-scrollbar-thumb { background: rgba(102,126,234,0.3); border-radius: 2px; }
+
+        /* ══════════════════════════════
+           SLIDE 9 — PARALLEL AGENTS
+        ══════════════════════════════ */
+        /* Animated terminal body */
+        #t8-body {
+            max-height: 360px; overflow-y: auto;
+            scroll-behavior: smooth;
+            padding: 20px 22px;
+            font-size: 0.8rem; line-height: 1.75;
+        }
+        #t8-body::-webkit-scrollbar { width: 3px; }
+        #t8-body::-webkit-scrollbar-thumb { background: rgba(102,126,234,0.3); border-radius: 2px; }
+
+        /* ── GLOBAL TOOLTIP ── */
+        #tip {
+            position: fixed; z-index: 9999; pointer-events: none;
+            background: rgba(10,10,22,0.95);
+            border: 1px solid rgba(102,126,234,0.4);
+            color: #ddd; font-size: 0.78rem; font-family: 'Space Grotesk', sans-serif;
+            padding: 7px 12px; border-radius: 8px;
+            max-width: 280px; line-height: 1.4;
+            opacity: 0; transition: opacity 0.18s ease;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            white-space: normal;
+        }
+        #tip.vis { opacity: 1; }
+        #tip.has-link { pointer-events: auto; }
+        #tip .tip-src {
+            display: block; margin-top: 6px; padding-top: 5px;
+            border-top: 1px solid rgba(102,126,234,0.2);
+            font-size: 0.65rem;
+        }
+        #tip .tip-src a {
+            color: var(--purple); text-decoration: none;
+            transition: color 0.15s;
+        }
+        #tip .tip-src a:hover { color: var(--pink); text-decoration: underline; }
+        .evo-stat[data-src] { cursor: pointer; border-radius: 6px; padding: 3px 6px; margin: -3px -6px; transition: background 0.15s; }
+        .evo-stat[data-src]:hover { background: rgba(255,255,255,0.05); }
+
+        /* ══════════════════════════════
+           SLIDE 10 — OBRIGADO
+        ══════════════════════════════ */
+        #s9 { align-items: center; justify-content: center; }
+        #s9::before {
+            content: ''; position: absolute;
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(102,126,234,0.1) 0%, transparent 70%);
+            border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%);
+        }
+        .thanks-wrap { position: relative; z-index: 1; text-align: center; }
+        .thanks-title {
+            font-size: 7.5rem; font-weight: 700; letter-spacing: -5px; line-height: 1;
+            background: linear-gradient(135deg, var(--purple), var(--pink), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; background-size: 200% 200%;
+            animation: gradDrift 3s ease-in-out infinite;
+            margin-bottom: 10px;
+        }
+        .thanks-sub {
+            font-size: 0.85rem; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 3px; margin-bottom: 38px;
+        }
+        .qr-row { display: flex; gap: 22px; justify-content: center; margin-bottom: 38px; }
+        .qr-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px; padding: 22px;
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            text-decoration: none; transition: all 0.35s;
+        }
+        .qr-card:hover {
+            border-color: var(--purple);
+            background: rgba(102,126,234,0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 18px 38px rgba(102,126,234,0.22);
+        }
+        .qr-card img { border-radius: 9px; border: 2px solid rgba(102,126,234,0.28); transition: border-color 0.3s; }
+        .qr-card:hover img { border-color: var(--purple); }
+        .qr-name { font-size: 0.95rem; font-weight: 700; color: white; }
+        .qr-sub  { font-size: 0.67rem; color: var(--purple); text-transform: uppercase; letter-spacing: 2px; }
+        .thanks-footer { font-size: 0.82rem; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <div class="progress-line" id="progressLine"></div>
+    <div class="slides-wrapper">
+
+        <!-- ① INTRO -->
+        <div class="slide centered" id="s1">
+            <canvas id="particles"></canvas>
+            <div class="intro-wrap">
+                <div class="intro-eyebrow">Meetup IA · WeHandle · Q1 2026</div>
+                <div class="intro-title">BMAD</div>
+                <div class="intro-sub">Breakthrough Method for Agile AI-Driven Development</div>
+                <div class="intro-badge">Framework Open-Source · 43k Stars · V6</div>
+            </div>
+        </div>
+
+        <!-- ② O QUE É BMAD -->
+        <div class="slide" id="s2">
+            <div class="two-col">
+                <div>
+                    <div class="label">O framework</div>
+                    <h2 class="title">O que é <span class="grad">BMAD?</span></h2>
+                    <p class="bmad-desc">Framework open-source que transforma desenvolvimento com IA de "vibe coding" em workflows estruturados e production-ready.</p>
+                    <div class="stats-2x2">
+                        <div class="stat-box"><div class="n">43k</div><div class="l">GitHub Stars</div></div>
+                        <div class="stat-box"><div class="n">V6</div><div class="l">Versão Atual</div></div>
+                        <div class="stat-box"><div class="n">12+</div><div class="l">Agentes</div></div>
+                        <div class="stat-box"><div class="n">34+</div><div class="l">Workflows</div></div>
+                    </div>
+                    <div class="karpathy">
+                        "I just see things, say things, run things, and copy-paste things, and it mostly works."
+                        <br><strong>— Andrej Karpathy</strong>, Ex-director de IA da Tesla, Feb 2025
+                    </div>
+                </div>
+                <div>
+                    <div class="label" style="text-align:right">12+ Agentes Especializados</div>
+                    <div class="agents-grid-4">
+                        <div class="ag"><div class="ic">📋</div><div class="nm">PM</div></div>
+                        <div class="ag"><div class="ic">🏗️</div><div class="nm">Architect</div></div>
+                        <div class="ag"><div class="ic">💻</div><div class="nm">Developer</div></div>
+                        <div class="ag"><div class="ic">🎨</div><div class="nm">UX</div></div>
+                        <div class="ag"><div class="ic">📊</div><div class="nm">Scrum Master</div></div>
+                        <div class="ag"><div class="ic">🧪</div><div class="nm">QA</div></div>
+                        <div class="ag"><div class="ic">📝</div><div class="nm">Tech Writer</div></div>
+                        <div class="ag"><div class="ic">🔒</div><div class="nm">Security</div></div>
+                        <div class="ag"><div class="ic">🚀</div><div class="nm">DevOps</div></div>
+                        <div class="ag"><div class="ic">🔍</div><div class="nm">Reviewer</div></div>
+                        <div class="ag"><div class="ic">📖</div><div class="nm">Docs</div></div>
+                        <div class="ag"><div class="ic">🎯</div><div class="nm">PO</div></div>
+                    </div>
+                    <div class="scale-box">
+                        <div class="label">Scale-Adaptive Intelligence</div>
+                        <p>Ajusta automaticamente a profundidade do planejamento baseada na complexidade — de bug fixes rápidos a sistemas enterprise.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ③ WORKFLOWS -->
+        <div class="slide centered" id="s3">
+            <div style="width:100%;max-width:1000px;margin:0 auto">
+                <div class="label" style="text-align:center">34+ Workflows</div>
+                <h2 class="title" style="text-align:center;font-size:3.2rem;margin-bottom:6px">Workflows <span class="grad">por Agente</span></h2>
+                <p style="text-align:center;font-size:0.85rem;color:var(--muted);margin-bottom:22px">Passe o mouse para explorar</p>
+                <div class="wf-grid-3">
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">📋</span><span class="wf-name">PM / PO</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">CP — Create PRD</span><span class="wf-tag">CB — Create Brief</span>
+                            <span class="wf-tag">CE — Create Epics</span><span class="wf-tag">CS — Create Stories</span>
+                            <span class="wf-tag">SP — Sprint Planning</span>
+                        </div>
+                        <div class="wf-footer">Gerencia produto e planejamento</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">🏗️</span><span class="wf-name">Architect</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">CA — Create Architecture</span><span class="wf-tag">DB — DB Schema</span>
+                            <span class="wf-tag">API — API Design</span><span class="wf-tag">CL — Cloud Architecture</span>
+                            <span class="wf-tag">AR — Architecture Review</span>
+                        </div>
+                        <div class="wf-footer">Decisões técnicas e arquitetura</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">💻</span><span class="wf-name">Developer</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">QQ — Quick Dev</span><span class="wf-tag">DS — Dev Story</span>
+                            <span class="wf-tag">CI — Code Implementation</span><span class="wf-tag">BA — Bug Analysis</span>
+                            <span class="wf-tag">DM — Data Modeling</span>
+                        </div>
+                        <div class="wf-footer">Implementação de código</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">🎨</span><span class="wf-name">UX Designer</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">CU — Create UX</span><span class="wf-tag">UI/UX Spec</span>
+                            <span class="wf-tag">PC — Persona Creation</span><span class="wf-tag">UR — User Research</span>
+                        </div>
+                        <div class="wf-footer">Design e experiência do usuário</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">🧪</span><span class="wf-name">QA Engineer</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">TP — Test Planning</span><span class="wf-tag">QA — E2E Tests</span>
+                            <span class="wf-tag">AT — Acceptance Testing</span><span class="wf-tag">PR — Performance Review</span>
+                        </div>
+                        <div class="wf-footer">Qualidade e testes</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">🔍</span><span class="wf-name">Reviewer</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">CR — Code Review</span><span class="wf-tag">AR — Adversarial Review</span>
+                            <span class="wf-tag">ECH — Edge Case Hunter</span><span class="wf-tag">CQ — Code Quality</span>
+                        </div>
+                        <div class="wf-footer">Revisão e qualidade</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">📝</span><span class="wf-name">Tech Writer</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">Documentation</span><span class="wf-tag">WD — Write Document</span>
+                            <span class="wf-tag">VD — Validate Doc</span><span class="wf-tag">MG — Mermaid Diagram</span>
+                        </div>
+                        <div class="wf-footer">Documentação técnica</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">🔒</span><span class="wf-name">Security</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">Security Audit</span><span class="wf-tag">RA — Risk Assessment</span>
+                            <span class="wf-tag">Compliance Check</span><span class="wf-tag">TD — Tech Debt</span>
+                        </div>
+                        <div class="wf-footer">Segurança e compliance</div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="wf-head"><span class="wf-icon">🚀</span><span class="wf-name">DevOps</span></div>
+                        <div class="wf-tags">
+                            <span class="wf-tag">Deployment</span><span class="wf-tag">CI/CD Setup</span>
+                            <span class="wf-tag">Integrations</span><span class="wf-tag">Release Planning</span>
+                        </div>
+                        <div class="wf-footer">Deploy e operações</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ④ FRAMEWORKS -->
+        <div class="slide" id="s4">
+            <div style="width:100%;max-width:1100px;margin:0 auto">
+                <div class="label">Comparativo</div>
+                <h2 class="title">Frameworks de <span class="grad">AI Dev</span></h2>
+                <div class="fw-grid">
+                    <div class="fw-card star">
+                        <div class="fw-name">BMAD <span class="af-sz">43k ★</span></div>
+                        <div class="fw-type">Metodologia + Agentes</div>
+                        <div class="fw-desc">Workflow completo com 12+ agentes especializados, do brief ao deploy. Agile adaptado para IA.</div>
+                    </div>
+                    <div class="fw-card">
+                        <div class="fw-name">Spec Kit <span class="af-sz">84k ★</span></div>
+                        <div class="fw-type">Specification-driven</div>
+                        <div class="fw-desc">SPEC.md como fonte de verdade central. Toolkit oficial do GitHub, tool-agnostic.</div>
+                    </div>
+                    <div class="fw-card">
+                        <div class="fw-name">Superpowers <span class="af-sz">125k ★</span></div>
+                        <div class="fw-type">TDD + Subagentes</div>
+                        <div class="fw-desc">Workflow disciplinado com TDD obrigatório e subagentes autônomos por tarefa com review em dois estágios.</div>
+                    </div>
+                    <div class="fw-card">
+                        <div class="fw-name">GSD <span class="af-sz">45k ★</span></div>
+                        <div class="fw-type">Meta-prompting</div>
+                        <div class="fw-desc">Anti-burocracia: resolve degradação de contexto com ondas de execução paralela e contexto fresco.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⑤ 8 NÍVEIS -->
+        <div class="slide centered" id="s5">
+            <div style="width:100%;max-width:900px;margin:0 auto">
+                <div class="label" style="text-align:center">AI Engineering Maturity</div>
+                <h2 class="title" style="text-align:center;font-size:2.9rem;margin-bottom:0">Os 8 Níveis de <span class="grad">AI Engineering</span></h2>
+                <div class="staircase-v2">
+                    <div class="stair stair-8">
+                        <span class="stair-num">8</span>
+                        <span class="stair-label">Autonomous Agent Teams</span>
+                        <span class="stair-badge badge-beyond">além do BMAD</span>
+                    </div>
+                    <div class="stair stair-7">
+                        <span class="stair-num">7</span>
+                        <span class="stair-label">Background Agents</span>
+                        <span class="stair-badge badge-beyond">além do BMAD</span>
+                    </div>
+                    <div class="stair stair-6">
+                        <span class="stair-num">6</span>
+                        <span class="stair-label">Harness Engineering</span>
+                        <span class="stair-badge badge-end">✓ BMAD te leva até aqui</span>
+                    </div>
+                    <div class="stair stair-5">
+                        <span class="stair-num">5</span>
+                        <span class="stair-label">MCP &amp; Skills</span>
+                    </div>
+                    <div class="stair stair-4">
+                        <span class="stair-num">4</span>
+                        <span class="stair-label">Compounding Engineering</span>
+                    </div>
+                    <div class="stair stair-3">
+                        <span class="stair-num">3</span>
+                        <span class="stair-label">Context Engineering</span>
+                    </div>
+                    <div class="stair stair-2">
+                        <span class="stair-num">2</span>
+                        <span class="stair-label">Agent IDE</span>
+                        <span class="stair-badge badge-start">← você provavelmente está aqui</span>
+                    </div>
+                    <div class="stair stair-1">
+                        <span class="stair-num">1</span>
+                        <span class="stair-label">Tab Complete</span>
+                        <span class="stair-badge badge-base">← a maioria começa aqui</span>
+                    </div>
+                </div>
+                <div class="levels-footer">
+                    Com BMAD você chega até o nível <strong class="grad">6 — Harness Engineering</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⑥ HARNESS ENGINEERING -->
+        <div class="slide" id="s6">
+            <div class="harness-cols">
+                <div>
+                    <div class="label">Disciplina emergente</div>
+                    <h2 class="title">Harness <span class="grad">Engineering</span></h2>
+                    <div class="big-quote">
+                        "A disciplina que faz agentes IA serem confiáveis em produção — não é só prompt engineering com outro nome."
+                    </div>
+                    <div class="big-quote">
+                        "Three engineers at OpenAI shipped Codex, um agente autônomo que gerou mais de um milhão de linhas de código sem uma linha escrita por humanos. O modelo foi impressionante. Mas o modelo não era o segredo."
+                        <div class="qauthor">— Kai Renner, Lead Engineer, Harness Engineering AI · Mar 2026</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="label" style="margin-bottom:12px">O que NÃO é</div>
+                    <div class="not-list">
+                        <div class="not-item"><span>❌</span> Apenas "prompt engineering"</div>
+                        <div class="not-item"><span>❌</span> Mais prompts = melhor IA</div>
+                        <div class="not-item"><span>❌</span> Solução mágica</div>
+                    </div>
+                    <div class="label" style="margin-bottom:12px">O que REALMENTE É</div>
+                    <div class="is-grid-2">
+                        <div class="is-card"><h4>🏗️ Arquitetura de Guardrails</h4><p>Padrões, validações, checkpoints de qualidade</p></div>
+                        <div class="is-card"><h4>⚡ Infraestrutura de Controle</h4><p>Retry, timeouts, circuit breakers</p></div>
+                        <div class="is-card"><h4>📊 Métricas e Observabilidade</h4><p>O que está rodando? Quanto custa?</p></div>
+                        <div class="is-card"><h4>🔒 Padrões de Segurança</h4><p>Sanitização, validation, compliance</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⑦ EVOLUÇÃO — ANTES / ATUAL / DEPOIS -->
+        <div class="slide" id="s7">
+            <div style="width:100%;max-width:1150px;margin:0 auto">
+                <div class="label">A evolução do ciclo de desenvolvimento</div>
+                <h2 class="title" style="font-size:2.8rem;margin-bottom:18px">Antes. <span style="color:#ff7766">Vibe Coding.</span> <span class="grad">Frameworks.</span></h2>
+                <div class="evo-grid">
+                    <!-- ANTES -->
+                    <div class="evo-col evo-old">
+                        <div class="evo-era">Antes</div>
+                        <div class="evo-title">Tradicional</div>
+                        <div class="evo-stats">
+                            <div class="evo-stat" data-tip="Manufatura 18-24 meses, fintech 9-15 meses, projetos médios 4-9 meses" data-src="https://scaleupally.io/blog/software-development-timeline/" data-src-name="ScaleUpAlly"><span class="evo-val">6-24m</span><span class="evo-lbl">ciclo de entrega</span></div>
+                            <div class="evo-stat" data-tip="Time típico: PM, 3-5 devs, 1-2 QA, 1 designer. Esforço: Dev ~50%, QA ~25%, PM/UX ~25%" data-src="https://onix-systems.com/blog/software-development-team-size-and-roles" data-src-name="Onix Systems"><span class="evo-val">4-8</span><span class="evo-lbl">pessoas por time (PM, QA, Dev, UX, Tech Lead)</span></div>
+                            <div class="evo-stat" data-tip="31% bem-sucedidos, 50% atrasam/estouram budget, 19% falham completamente" data-src="https://thestory.is/en/journal/chaos-report/" data-src-name="Standish Group CHAOS Report"><span class="evo-val">31%</span><span class="evo-lbl">taxa de sucesso de projetos</span></div>
+                            <div class="evo-stat" data-tip="Devs puros: 39%. Média geral: 32%. Cerca de 52 minutos por dia de código efetivo" data-src="https://www.sonarsource.com/blog/how-much-time-do-developers-spend-actually-writing-code/" data-src-name="Sonar"><span class="evo-val">32%</span><span class="evo-lbl">do tempo codificando (~52 min/dia)</span></div>
+                            <div class="evo-stat" data-tip="12.2h/semana em meetings em grandes empresas. Focus time cai de 22.5h (startups) para 16.9h (enterprise)" data-src="https://www.getclockwise.com/eng-meeting-benchmarks" data-src-name="Clockwise"><span class="evo-val">23%</span><span class="evo-lbl">do tempo em meetings</span></div>
+                            <div class="evo-stat" data-tip="44% das organizações reportam onboarding > 2 meses. Primeiro PR: ~1 semana. Domínio do codebase: 3-9+ meses" data-src="https://about.gitlab.com/the-source/platform/how-to-accelerate-developer-onboarding-and-why-it-matters/" data-src-name="GitLab"><span class="evo-val">2 meses</span><span class="evo-lbl">onboarding de novo dev</span></div>
+                        </div>
+                        <div class="evo-src">Clique nos dados para ver a fonte</div>
+                    </div>
+                    <!-- VIBE CODING -->
+                    <div class="evo-col evo-vibe">
+                        <div class="evo-era">2024-25</div>
+                        <div class="evo-title">Vibe Coding</div>
+                        <div class="evo-stats">
+                            <div class="evo-stat" data-tip="Karpathy: 'Accept All always, don't read the diffs anymore... not really coding — I just see stuff, say stuff, run stuff'" data-src="https://x.com/karpathy/status/1886192184808149383" data-src-name="Andrej Karpathy (X)"><span class="evo-val">horas</span><span class="evo-lbl">para protótipo (parece rápido)</span></div>
+                            <div class="evo-stat" data-tip="'Not too bad for throwaway weekend projects' — o próprio Karpathy ressalvou que não é pra produção" data-src="https://en.wikipedia.org/wiki/Vibe_coding" data-src-name="Wikipedia"><span class="evo-val">1</span><span class="evo-lbl">dev + "aceitar tudo" da IA</span></div>
+                            <div class="evo-stat" data-tip="68% classificam como 'rápido mas falho', 19% como 'frágil'. PRs de IA têm 1.7× mais issues que humanos" data-src="https://arxiv.org/html/2510.00328v1" data-src-name="arXiv 2510.00328"><span class="evo-val">87%</span><span class="evo-lbl">percepção negativa de qualidade</span></div>
+                            <div class="evo-stat" data-tip="Estudo com 132 unidades comportamentais. 36% pularam QA completamente, 18% confiaram sem verificar" data-src="https://arxiv.org/html/2510.00328v1" data-src-name="arXiv 2510.00328"><span class="evo-val">11%</span><span class="evo-lbl">taxa de colapso/abandono</span></div>
+                            <div class="evo-stat" data-tip="Cursor user: 170M tokens em 2 dias. Outro: 28M tokens para gerar 149 linhas. Um acumulou $350 em um dia" data-src="https://www.glideapps.com/blog/vibe-coding-cost" data-src-name="Glide Blog"><span class="evo-val">170M</span><span class="evo-lbl">tokens em 2 dias (caso real)</span></div>
+                            <div class="evo-stat" data-tip="Gartner prevê aumento de 2.500% nos defeitos de software via abordagens prompt-to-app até 2028" data-src="https://www.armorcode.com/report/gartner-predicts-2026-ai-potential-and-risks-emerge-in-software-engineering-technologies" data-src-name="Gartner Predicts 2026"><span class="evo-val">+2500%</span><span class="evo-lbl">defeitos previstos até 2028 (Gartner)</span></div>
+                        </div>
+                        <div class="evo-src">Clique nos dados para ver a fonte</div>
+                    </div>
+                    <!-- FRAMEWORKS -->
+                    <div class="evo-col evo-fw">
+                        <div class="evo-era">Agora</div>
+                        <div class="evo-title">Frameworks <span class="grad">Estruturados</span></div>
+                        <div class="evo-stats">
+                            <div class="evo-stat" data-tip="Wipro: projeto de meses feito em 20h (4h/dia × 5 dias). Dun (fintech): 2 meses → 48h" data-src="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/" data-src-name="AWS DevOps Blog"><span class="evo-val">20-48h</span><span class="evo-lbl">ciclo completo (casos AI-DLC)</span></div>
+                            <div class="evo-stat" data-tip="BMAD: 12+ agentes (PM, Architect, Dev, QA, UX, Scrum Master) — cada um especialista no seu domínio" data-src="https://github.com/bmad-code-org/BMAD-METHOD" data-src-name="BMAD GitHub"><span class="evo-val">1</span><span class="evo-lbl">dev + agentes especializados</span></div>
+                            <div class="evo-stat" data-tip="Specs com IA aprimorada entregam implementação precisa na primeira tentativa, sem ciclos de retrabalho" data-src="https://developers.redhat.com/articles/2025/10/22/how-spec-driven-development-improves-ai-coding-quality" data-src-name="Red Hat Developer"><span class="evo-val">95%+</span><span class="evo-lbl">precisão na 1ª tentativa (spec-driven)</span></div>
+                            <div class="evo-stat" data-tip="Antes: compromete 10, entrega 2 (20%). Com AI-DLC: previsibilidade acima de 80%. Baseado em 100+ experimentos" data-src="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/" data-src-name="AWS AI-DLC"><span class="evo-val">80%+</span><span class="evo-lbl">previsibilidade de entrega</span></div>
+                            <div class="evo-stat" data-tip="Redução de até 50% no tempo e 40% nos defeitos com especificações vivas. ROI em 3-6 meses" data-src="https://www.augmentcode.com/guides/what-is-spec-driven-development" data-src-name="Augment Code"><span class="evo-val">-50%</span><span class="evo-lbl">tempo · -40% defeitos</span></div>
+                            <div class="evo-stat" data-tip="10-15× ganhos de produtividade reportados com clientes globais. 60%+ das orgs veem 25%+ de melhoria" data-src="https://www.mckinsey.com/capabilities/tech-and-ai/our-insights/unleashing-developer-productivity-with-generative-ai" data-src-name="McKinsey"><span class="evo-val">10-15×</span><span class="evo-lbl">ganho de produtividade (AWS)</span></div>
+                        </div>
+                        <div class="evo-src">Clique nos dados para ver a fonte</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⑧ BMAD EM PRODUÇÃO REAL -->
+        <div class="slide" id="s8">
+            <div style="width:100%;max-width:1250px;margin:0 auto">
+                <div class="label">BMAD em ação — do zero ao deploy</div>
+                <h2 class="title" style="font-size:2.6rem;margin-bottom:12px">Uma jornada <span class="grad">completa</span></h2>
+                <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:24px;align-items:stretch">
+                    <div class="terminal" style="min-height:420px">
+                        <div class="t-bar">
+                            <div class="td r"></div><div class="td y"></div><div class="td g"></div>
+                            <div class="t-ttl">painel-admin — jornada BMAD</div>
+                        </div>
+                        <div id="t8-body"></div>
+                    </div>
+                    <div class="doc-preview">
+                        <div class="doc-tab"><span class="doc-icon">📄</span><span id="doc-filename">aguardando...</span></div>
+                        <div class="doc-body" id="doc-body"><span style="color:#555">O artefato gerado aparece aqui...</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⑨ OBRIGADO -->
+        <div class="slide" id="s9">
+            <div class="thanks-wrap">
+                <div class="thanks-title">Obrigado!</div>
+                <div class="thanks-sub">Scanne os QR codes para acessar</div>
+                <div class="qr-row">
+                    <a href="https://github.com/bmad-code-org/BMAD-METHOD" target="_blank" class="qr-card">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://github.com/bmad-code-org/BMAD-METHOD&bgcolor=0a0a15&color=667eea" width="120" height="120" alt="BMAD GitHub">
+                        <div class="qr-name">BMAD Method</div>
+                        <div class="qr-sub">Framework · GitHub</div>
+                    </a>
+                    <a href="#" class="qr-card">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=DownloadPresentation&bgcolor=0a0a15&color=f093fb" width="120" height="120" alt="Apresentação">
+                        <div class="qr-name">Apresentação</div>
+                        <div class="qr-sub">HTML Interativo</div>
+                    </a>
+                    <a href="https://linkedin.com/in/marcelomendes" target="_blank" class="qr-card">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://linkedin.com/in/marcelomendes&bgcolor=0a0a15&color=0ea5e9" width="120" height="120" alt="LinkedIn">
+                        <div class="qr-name">Marcelo Mendes</div>
+                        <div class="qr-sub">Palestrante · LinkedIn</div>
+                    </a>
+                </div>
+                <div class="thanks-footer">Meetup IA [WeHandle] · Q1 2026</div>
+            </div>
+        </div>
+
+    </div><!-- /slides-wrapper -->
+
+    <!-- NAV PILL -->
+    <div class="nav-pill">
+        <button class="nav-btn" onclick="prev()">← Anterior</button>
+        <div class="nav-dots" id="dots"></div>
+        <button class="nav-btn" onclick="next()">Próximo →</button>
+        <span class="slide-counter" id="counter">01/09</span>
+    </div>
+
+    <script>
+    // ── PARTICLES ──
+    (function(){
+        const c = document.getElementById('particles');
+        const ctx = c.getContext('2d');
+        function resize(){ c.width = innerWidth; c.height = innerHeight; }
+        resize(); addEventListener('resize', resize);
+        const P = Array.from({length:55}, () => ({
+            x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+            vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
+            r: Math.random()*1.5+.5, a: Math.random()*.4+.15
+        }));
+        function frame(){
+            ctx.clearRect(0,0,c.width,c.height);
+            P.forEach(p=>{ p.x+=p.vx; p.y+=p.vy;
+                if(p.x<0)p.x=c.width; if(p.x>c.width)p.x=0;
+                if(p.y<0)p.y=c.height; if(p.y>c.height)p.y=0;
+            });
+            for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){
+                const dx=P[i].x-P[j].x, dy=P[i].y-P[j].y, d=Math.hypot(dx,dy);
+                if(d<110){ ctx.beginPath(); ctx.strokeStyle=`rgba(102,126,234,${(1-d/110)*.25})`; ctx.lineWidth=.5;
+                    ctx.moveTo(P[i].x,P[i].y); ctx.lineTo(P[j].x,P[j].y); ctx.stroke(); }
+            }
+            P.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+                ctx.fillStyle=`rgba(102,126,234,${p.a})`; ctx.fill(); });
+            requestAnimationFrame(frame);
+        }
+        frame();
+    })();
+
+    // ── SLIDES ──
+    let cur = 0;
+    const slides = [...document.querySelectorAll('.slide')];
+    const N = slides.length;
+
+    (function init(){
+        const d = document.getElementById('dots');
+        slides.forEach((_,i)=>{ const dot=document.createElement('div'); dot.className='nav-dot'+(i===0?' active':''); dot.onclick=()=>go(i); d.appendChild(dot); });
+        update();
+    })();
+
+    function update(){
+        slides.forEach((s,i)=>{ s.classList.remove('active','prev');
+            if(i===cur) s.classList.add('active'); else if(i<cur) s.classList.add('prev'); });
+        document.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+        document.getElementById('progressLine').style.width = ((cur+1)/N*100)+'%';
+        document.getElementById('counter').textContent = String(cur+1).padStart(2,'0')+'/'+String(N).padStart(2,'0');
+    }
+
+    function next(){ if(cur<N-1){cur++;update();} }
+    function prev(){ if(cur>0){cur--;update();} }
+    function go(i){ cur=i; update(); }
+
+    document.addEventListener('keydown', e=>{
+        if(['ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();next();}
+        if(e.key==='ArrowLeft'){e.preventDefault();prev();}
+    });
+
+    // ── GENERIC CAROUSEL (s2, s3, s5) ──
+    function createCarousel(slideId, selector, interval, pauseSelector, reverse) {
+        let items = [...document.querySelectorAll(`#${slideId} ${selector}`)];
+        if (reverse) items = items.slice().reverse();
+        if (!items.length) return null;
+        const car = { items, iv: null, idx: -1, ms: interval };
+
+        car.show = function(i) {
+            this.items.forEach(a => a.classList.remove('ag-hl'));
+            if (i < 0 || i >= this.items.length) return;
+            const el = this.items[i];
+            el.classList.add('ag-hl');
+            const t = document.getElementById('tip');
+            const tipText = el.dataset.tip;
+            if (tipText && t) {
+                t.textContent = tipText;
+                t.classList.remove('has-link');
+                t.classList.add('vis');
+                const r = el.getBoundingClientRect();
+                const tw = t.offsetWidth, th = t.offsetHeight;
+                // Prefer below, fallback above if too low
+                let top = r.bottom + 10;
+                if (top + th > innerHeight - 60) top = r.top - th - 10;
+                t.style.left = Math.max(10, Math.min(r.left + r.width/2 - tw/2, innerWidth - tw - 10)) + 'px';
+                t.style.top  = top + 'px';
+            }
+        };
+
+        car.start = function() {
+            if (this.iv) return;
+            this.idx = -1;
+            this.iv = setInterval(() => {
+                this.idx++;
+                if (this.idx >= this.items.length) this.idx = 0;
+                this.show(this.idx);
+            }, this.ms);
+            setTimeout(() => { this.idx = 0; this.show(0); }, 600);
+        };
+
+        car.stop = function() {
+            if (this.iv) { clearInterval(this.iv); this.iv = null; }
+            this.items.forEach(a => a.classList.remove('ag-hl'));
+            const t = document.getElementById('tip');
+            if (t) t.classList.remove('vis');
+            this.idx = -1;
+        };
+
+        // Pause on manual hover
+        const zone = document.querySelector(`#${slideId} ${pauseSelector}`);
+        if (zone) {
+            zone.addEventListener('mouseenter', () => {
+                if (car.iv) { clearInterval(car.iv); car.iv = null; }
+                car.items.forEach(a => a.classList.remove('ag-hl'));
+            });
+            zone.addEventListener('mouseleave', () => {
+                if (document.getElementById(slideId)?.classList.contains('active')) car.start();
+            });
+        }
+        return car;
+    }
+
+    const carousels = {
+        s2: createCarousel('s2', '.ag', 2200, '.agents-grid-4'),
+        s3: createCarousel('s3', '.wf-tag', 1600, '.wf-grid-3'),
+        s5: createCarousel('s5', '.stair', 2500, '.staircase-v2', true),
+    };
+
+    // ── SLIDE ANIMATIONS (8 & 9) ──
+    const animState = { s8: 'idle' };
+    const animTimers = { s8: [] };
+
+    function at8(ms, fn) { animTimers.s8.push(setTimeout(fn, ms)); }
+
+    function addLine(body, html) {
+        const s = document.createElement('span');
+        s.className = 't-out'; s.style.display = 'block';
+        s.innerHTML = html || '&nbsp;';
+        body.appendChild(s);
+        body.scrollTop = body.scrollHeight;
+    }
+
+
+
+    function resetSlide8() {
+        animTimers.s8.forEach(clearTimeout); animTimers.s8 = [];
+        animState.s8 = 'idle';
+        const b = document.getElementById('t8-body');
+        if (b) b.innerHTML = '';
+        const fn = document.getElementById('doc-filename');
+        const bd = document.getElementById('doc-body');
+        if (fn) fn.textContent = 'aguardando...';
+        if (bd) bd.innerHTML = '<span style="color:#555">O artefato gerado aparece aqui...</span>';
+    }
+
+    // Doc preview content for each step
+    const DOCS = {
+        prd: { file: 'prd.md — 24KB', html: `<div class="dh1"># PRD — Painel Admin</div>
+<div class="dmeta">status: approved · type: SaaS · priority: P0</div>
+<div class="dh2">## Classification</div>
+<table class="dtbl"><tr><th>Attribute</th><th>Value</th></tr>
+<tr><td>Type</td><td>SaaS Multi-tenant</td></tr>
+<tr><td>Complexity</td><td>High (brownfield)</td></tr>
+<tr><td>Users</td><td>Admin + End Users</td></tr></table>
+<div class="dh2">## Functional Requirements</div>
+<div class="dfr">FR1: Dashboard com métricas em tempo real</div>
+<div class="dfr">FR2: CRUD de usuários com RBAC</div>
+<div class="dfr">FR3: Sistema de billing recorrente</div>
+<div class="dfr">FR4: Webhooks com retry automático</div>
+<div class="dmeta">... 54 requisitos adicionais</div>
+<div class="dh2">## Non-Functional Requirements</div>
+<div>NFR1: Latência &lt; 200ms (p95)</div>
+<div>NFR2: RLS em 100% das queries</div>` },
+
+        arch: { file: 'architecture.md — 42KB', html: `<div class="dh1"># Architecture — Painel Admin</div>
+<div class="dmeta">status: approved · stack: Next.js + Supabase</div>
+<div class="dh2">## Technical Decisions</div>
+<table class="dtbl"><tr><th>Decision</th><th>Choice</th><th>Rationale</th></tr>
+<tr><td>Auth</td><td>Supabase Auth</td><td>RLS nativo</td></tr>
+<tr><td>DB</td><td>PostgreSQL</td><td>RLS + JSONB</td></tr>
+<tr><td>Deploy</td><td>Vercel + Render</td><td>Edge + Workers</td></tr></table>
+<div class="dh2">## Multi-tenant Pattern</div>
+<div class="dh3">### RLS Policy</div>
+<div style="color:#a78bfa">CREATE POLICY tenant_isolation</div>
+<div style="color:#a78bfa">  USING (group_id = current_setting(</div>
+<div style="color:#a78bfa">    'app.current_tenant')::uuid);</div>` },
+
+        epics: { file: 'epics.md — 6 épicos · 26 stories', html: `<div class="dh1"># Epics & Stories</div>
+<div class="dmeta">frsCovered: 58/58 · storyCount: 26</div>
+<div class="dh2">## Epic 1: Multi-tenant + RLS</div>
+<div>  Story 1.1: Migration multi-tenant</div>
+<div>  Story 1.2: RLS policies por tabela</div>
+<div>  Story 1.3: Tenant isolation tests</div>
+<div class="dh2">## Epic 2: Auth + RBAC</div>
+<div>  Story 2.1: Login com Supabase Auth</div>
+<div>  Story 2.2: Role-based permissions</div>
+<div class="dh2">## Epic 3: Dashboard</div>
+<div>  Story 3.1: Métricas em tempo real</div>
+<div class="dh2">## Epic 4: Billing</div>
+<div>  Story 4.1: Integração gateway pagamento</div>
+<div class="dmeta">... +2 épicos, 16 stories</div>` },
+
+        story: { file: 'story-1.1-migration-multi-tenant.md', html: `<div class="dh1"># Story 1.1: Migration Multi-tenant</div>
+<div class="dmeta">status: done · epicId: 1 · priority: high</div>
+<div class="dh2">## User Story</div>
+<div>As a <span class="dagent">platform admin</span>,</div>
+<div>I want <strong>tenant isolation via RLS</strong>,</div>
+<div>So that <strong>cada tenant vê só seus dados</strong>.</div>
+<div class="dh2">## Acceptance Criteria</div>
+<div><span class="dcheck">✓</span> Given tenant_A, When query, Then só dados de A</div>
+<div><span class="dcheck">✓</span> Given cross-tenant, When access, Then 403</div>
+<div><span class="dcheck">✓</span> Given migration, When rollback, Then zero data loss</div>
+<div class="dh2">## Tasks</div>
+<div><span class="dcheck">✓</span> Criar migration add group_id</div>
+<div><span class="dcheck">✓</span> Criar RLS policies (AC: #1)</div>
+<div><span class="dcheck">✓</span> Testes de isolamento (AC: #2)</div>` },
+
+        spec: { file: 'tech-spec-webhook-handler.md', html: `<div class="dh1"># Tech Spec: Webhook Handler</div>
+<div class="dmeta">status: completed · created: 2026-03-15</div>
+<div class="dh2">## Problem Statement</div>
+<div>Webhooks do gateway falham silenciosamente.</div>
+<div class="dh2">## Solution</div>
+<div>Handler idempotente com retry + dead letter queue.</div>
+<div class="dh2">## Files to Modify</div>
+<table class="dtbl"><tr><th>File</th><th>Action</th></tr>
+<tr><td>webhook-handler.js</td><td style="color:#7de87d">NEW</td></tr>
+<tr><td>tenant-isolation.js</td><td style="color:#7de87d">NEW</td></tr>
+<tr><td>routes/index.js</td><td style="color:#febc2e">MODIFY</td></tr></table>
+<div class="dh2">## Technical Decisions</div>
+<div>• Idempotency key: payment_id + event_type</div>
+<div>• Retry: exponential backoff (3 attempts)</div>` },
+
+        review: { file: 'code-review-findings.md', html: `<div class="dh1"># Adversarial Code Review</div>
+<div class="dscore">82/100 — Grade A</div>
+<div class="dmeta">reviewer: 3-layer parallel (Blind, Edge Case, Acceptance)</div>
+<div class="dh2">## Findings</div>
+<div><span class="dfail">P1</span> Race condition no webhook retry — fix: mutex por payment_id</div>
+<div><span class="dfail">P2</span> SQL injection em filtro de data — fix: parameterized query</div>
+<div><span class="dcheck">OK</span> RLS policies cobrindo 100% das tabelas</div>
+<div><span class="dcheck">OK</span> Auth middleware aplicado em todas as rotas</div>
+<div><span class="dcheck">OK</span> Error handling com circuit breaker</div>
+<div class="dh2">## Edge Cases Testados</div>
+<div><span class="dcheck">✓</span> Webhook duplicado (idempotency)</div>
+<div><span class="dcheck">✓</span> Tenant deletion mid-request</div>
+<div><span class="dfail">!</span> Timeout em batch > 1000 registros — precisa paginação</div>` },
+
+        party: { file: 'party-mode — war room session', html: `<div class="dh1"># Party Mode — War Room</div>
+<div class="dmeta">agents: PM, Architect, QA, Security · duration: 12min</div>
+<div class="dh2" style="margin-top:6px">## Sessão ao vivo</div>
+<div><span class="dagent">John (PM):</span> "O webhook precisa ser idempotente — o gateway manda duplicatas."</div>
+<div style="height:4px"></div>
+<div><span class="dagent">Winston (Arch):</span> "Concordo. Sugiro mutex por payment_id + dead letter queue pra falhas persistentes."</div>
+<div style="height:4px"></div>
+<div><span class="dagent">Quinn (QA):</span> "Preciso de um test harness que simule duplicatas em paralelo. Sem isso, não aprovo."</div>
+<div style="height:4px"></div>
+<div><span class="dagent">Security:</span> "O endpoint precisa de rate limiting — 100 req/min por tenant. E validação de assinatura HMAC."</div>
+<div style="height:4px"></div>
+<div><span class="dagent">John (PM):</span> "Adicionando ao PRD: NFR-23 rate limiting, NFR-24 HMAC validation."</div>
+<div style="height:6px"></div>
+<div class="dcheck">✓ 3 decisões · 2 NFRs adicionados · 1 test plan criado</div>` }
+    };
+
+    function showDoc(key) {
+        const d = DOCS[key]; if (!d) return;
+        const fn = document.getElementById('doc-filename');
+        const bd = document.getElementById('doc-body');
+        if (fn) fn.textContent = d.file;
+        if (bd) { bd.style.opacity = '0'; setTimeout(() => { bd.innerHTML = d.html; bd.style.opacity = '1'; bd.scrollTop = 0; }, 150); }
+    }
+
+    function runSlide8() {
+        if (animState.s8 !== 'idle') return;
+        animState.s8 = 'running';
+        const b = document.getElementById('t8-body');
+        if (!b) return;
+        b.innerHTML = '';
+
+        const p = (cmd) => `<span class="t-prompt">~/painel$</span> <span class="t-cmd">${cmd}</span>`;
+        const ag= (name, txt) => `  <span style="color:#f093fb;font-weight:600">${name}:</span> <span style="color:#aaa">${txt}</span>`;
+        const ok= (txt) => `  <span style="color:#7de87d">✓</span> ${txt}`;
+        const sp= (txt) => `  <span style="color:#667eea">◉</span> <span style="color:#888">${txt}</span>`;
+        const t = 0;
+
+        // 1. PRD
+        at8(t+100,  () => addLine(b, p('/bmad-create-prd')));
+        at8(t+500,  () => addLine(b, ag('PM (John)', 'Qual o problema que o produto resolve?')));
+        at8(t+1100, () => addLine(b, '  <span style="color:#555">→</span> <span style="color:#bbb">"Painel admin multi-tenant com billing"</span>'));
+        at8(t+1600, () => addLine(b, sp('Estruturando 58 requisitos...')));
+        at8(t+2200, () => { addLine(b, ok('<span style="color:#ddd">prd.md</span> — 24KB · 58 FR · 22 NFR')); showDoc('prd'); });
+        at8(t+2400, () => addLine(b, ''));
+
+        // 2. Architecture
+        at8(t+2800, () => addLine(b, p('/bmad-create-architecture')));
+        at8(t+3200, () => addLine(b, ag('Architect (Winston)', 'Analisando PRD + constraints...')));
+        at8(t+3800, () => addLine(b, sp('Definindo stack, RLS policies, patterns...')));
+        at8(t+4500, () => { addLine(b, ok('<span style="color:#ddd">architecture.md</span> — 42KB · RLS + multi-tenant')); showDoc('arch'); });
+        at8(t+4700, () => addLine(b, ''));
+
+        // 3. Epics & Stories
+        at8(t+5100, () => addLine(b, p('/bmad-create-epics-and-stories')));
+        at8(t+5500, () => addLine(b, sp('Mapeando 58 FRs para épicos...')));
+        at8(t+6200, () => { addLine(b, ok('<span style="color:#ddd">6 épicos</span> · <span style="color:#ddd">26 stories</span> com ACs')); showDoc('epics'); });
+        at8(t+6400, () => addLine(b, ''));
+
+        // 4. Dev Story
+        at8(t+6800, () => addLine(b, p('/bmad-dev-story story-1.1')));
+        at8(t+7200, () => addLine(b, ag('Dev (Amelia)', 'Lendo ACs e contexto arquitetural...')));
+        at8(t+7800, () => { addLine(b, ok('Story 1.1 implementada — 3 arquivos · 218 linhas')); showDoc('story'); });
+        at8(t+8000, () => addLine(b, ''));
+
+        // 5. Quick Dev + Tech Spec
+        at8(t+8400,  () => addLine(b, p('/bmad-quick-dev "webhook handler"')));
+        at8(t+8800,  () => addLine(b, sp('Gerando tech-spec...')));
+        at8(t+9400,  () => { addLine(b, ok('tech-spec + implementação — 3 arquivos')); showDoc('spec'); });
+        at8(t+9600,  () => addLine(b, ''));
+
+        // 6. Code Review (adversarial)
+        at8(t+10000, () => addLine(b, p('/bmad-code-review')));
+        at8(t+10400, () => addLine(b, '  <span style="color:#a78bfa;font-weight:600">3 reviewers em paralelo:</span>'));
+        at8(t+10700, () => addLine(b, sp('Blind Hunter + Edge Case + Acceptance...')));
+        at8(t+11400, () => { addLine(b, ok('<span style="color:#7de87d">82/100</span> — 2 P1 encontrados · 5 OK')); showDoc('review'); });
+        at8(t+11600, () => addLine(b, ''));
+
+        // 7. Party Mode
+        at8(t+12000, () => addLine(b, p('/bmad-party-mode')));
+        at8(t+12400, () => addLine(b, '  <span style="color:#f093fb;font-weight:600">War Room — 4 agentes debatendo:</span>'));
+        at8(t+12800, () => addLine(b, sp('PM + Architect + QA + Security...')));
+        at8(t+13500, () => { addLine(b, ok('3 decisões · 2 NFRs adicionados')); showDoc('party'); });
+        at8(t+13700, () => addLine(b, ''));
+
+        // Cursor final
+        at8(t+14100, () => {
+            const s = document.createElement('span');
+            s.className = 't-out'; s.style.display = 'block';
+            s.innerHTML = `<span class="t-prompt">~/painel$</span> <span class="t-cur"></span>`;
+            b.appendChild(s); b.scrollTop = b.scrollHeight;
+            animState.s8 = 'done';
+        });
+    }
+
+    // Watch class changes on animated slides
+    const animObserver = new MutationObserver(muts => {
+        muts.forEach(m => {
+            const el = m.target;
+            const active = el.classList.contains('active');
+            // Carousels
+            if (carousels[el.id]) { if (active) carousels[el.id].start(); else carousels[el.id].stop(); }
+            // Terminal animation
+            if (el.id === 's8') { if (active) runSlide8(); else resetSlide8(); }
+        });
+    });
+    ['s2','s3','s5','s8'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) animObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    // ── TOOLTIPS ──
+    const TIPS = {
+        // PM / PO
+        'CP — Create PRD':       'Cria um PRD completo com PM via descoberta guiada — define escopo, personas e requisitos',
+        'CB — Create Brief':     'Define o brief inicial do produto: problema, público, objetivos e restrições',
+        'CE — Create Epics':     'Quebra o PRD em épicos e histórias de usuário prontas para o sprint',
+        'CS — Create Stories':   'Gera um arquivo de story completo com contexto técnico para o dev implementar',
+        'SP — Sprint Planning':  'Gera plano de sprint com tracking de status a partir dos épicos existentes',
+        'VP — Validate PRD':     'Valida o PRD contra padrões BMAD — detecta gaps, ambiguidades e riscos',
+        'EP — Edit PRD':         'Edita um PRD existente mantendo consistência e rastreabilidade',
+
+        // Architect
+        'CA — Create Architecture': 'Projeta a arquitetura técnica: stack, padrões, módulos, decisões e trade-offs',
+        'DB — DB Schema':           'Modela o schema de banco de dados alinhado à arquitetura definida',
+        'API — API Design':         'Define contratos de API: endpoints, payloads, autenticação e versionamento',
+        'CL — Cloud Architecture':  'Projeta infraestrutura em cloud: serviços, escalabilidade e custos',
+        'AR — Architecture Review': 'Revisa decisões arquiteturais existentes com foco em riscos e débito técnico',
+        'IR — Readiness':           'Valida se PRD + UX + Arquitetura + Épicos estão prontos para implementação',
+
+        // Developer
+        'QQ — Quick Dev':           'Implementa qualquer feature, bug fix ou mudança em fluxo único — clarifica→planeja→implementa',
+        'DS — Dev Story':           'Executa implementação guiada por story spec — contexto completo, zero ambiguidade',
+        'CI — Code Implementation': 'Codificação seguindo arquitetura, padrões e convenções do projeto',
+        'BA — Bug Analysis':        'Análise de causa raiz de bugs com diagnóstico preciso antes de qualquer fix',
+        'DM — Data Modeling':       'Modelagem de entidades e relacionamentos de dados do domínio',
+
+        // UX
+        'CU — Create UX':       'Planeja UX patterns, flows e especificações de design para o produto',
+        'UI/UX Spec':           'Especificações detalhadas de componentes, estados e interações de interface',
+        'PC — Persona Creation':'Cria personas de usuário com base em pesquisa para guiar decisões de produto',
+        'UR — User Research':   'Conduz pesquisa de usuário: entrevistas, surveys, análise de comportamento',
+
+        // QA
+        'TP — Test Planning':       'Estratégia e plano de testes: cobertura, tipos, prioridades e critérios',
+        'QA — E2E Tests':           'Gera testes end-to-end automatizados para features existentes com Playwright/Cypress',
+        'AT — Acceptance Testing':  'Verifica critérios de aceitação das stories — a feature faz o que prometeu?',
+        'PR — Performance Review':  'Avalia performance, gargalos e benchmarks do sistema',
+
+        // Reviewer
+        'CR — Code Review':         'Review adversarial paralelo: Blind Hunter + Edge Case Hunter + Acceptance Auditor',
+        'AR — Adversarial Review':  'Revisão cínica para encontrar falhas, gaps e problemas que passariam despercebidos',
+        'ECH — Edge Case Hunter':   'Caça casos de borda e condições não tratadas em código, specs ou diffs',
+        'CQ — Code Quality':        'Avalia qualidade de código: legibilidade, manutenibilidade e padrões do projeto',
+
+        // Tech Writer
+        'Documentation':        'Gera documentação abrangente do projeto para humanos e contexto de IA',
+        'WD — Write Document':  'Redige documentos técnicos (ADRs, RFCs, guias) com boas práticas',
+        'VD — Validate Doc':    'Valida documentação contra padrões — consistência, completude e clareza',
+        'MG — Mermaid Diagram': 'Cria diagramas técnicos em Mermaid: fluxos, entidade-relação, sequência',
+
+        // Security
+        'Security Audit':       'Análise de vulnerabilidades OWASP, injection, auth e exposição de dados',
+        'RA — Risk Assessment': 'Avaliação de riscos técnicos e de negócio com mitigações propostas',
+        'Compliance Check':     'Verifica conformidade com regulamentações (LGPD, GDPR, SOC2, etc.)',
+        'TD — Tech Debt':       'Identifica, prioriza e planeja o endereçamento de débito técnico',
+
+        // DevOps
+        'Deployment':           'Planejamento e execução de estratégia de deploy (blue-green, canary, rolling)',
+        'CI/CD Setup':          'Configura pipelines de integração e entrega contínua',
+        'Integrations':         'Planeja e implementa integrações com sistemas e serviços externos',
+        'Release Planning':     'Planejamento de releases: versões, changelogs, comunicação e rollback',
+
+        // Agents (slide 2)
+        'PM':           'John — Product Manager. Cria PRDs, briefs e conduz descoberta de produto',
+        'Architect':    'Winston — System Architect. Projeta arquitetura e decisões técnicas',
+        'Developer':    'Amelia — Senior Dev. Implementa stories com código limpo e production-ready',
+        'UX':           'Sally — UX Designer. Planeja experiências e especificações de interface',
+        'Scrum Master': 'Bob — Scrum Master. Sprints, planning e fluxo de desenvolvimento ágil',
+        'QA':           'Quinn — QA Engineer. Testes automatizados e garantia de qualidade',
+        'Tech Writer':  'Paige — Tech Writer. Documentação técnica e curadoria de conhecimento',
+        'Security':     'Auditorias de segurança, compliance e análise de vulnerabilidades',
+        'DevOps':       'Deploy, CI/CD, infraestrutura e integrações operacionais',
+        'Reviewer':     'Reviews adversariais com múltiplas camadas paralelas de análise',
+        'Docs':         'Geração e validação de documentação técnica do projeto',
+        'PO':           'Product Owner. Valida stories, aceita entregas e prioriza backlog',
+    };
+
+    // Apply tooltips to wf-tags
+    document.querySelectorAll('.wf-tag').forEach(el => {
+        const key = el.textContent.trim();
+        if (TIPS[key]) el.dataset.tip = TIPS[key];
+    });
+    // Apply tooltips to agent tiles
+    document.querySelectorAll('.ag').forEach(el => {
+        const key = el.querySelector('.nm')?.textContent.trim();
+        if (key && TIPS[key]) el.dataset.tip = TIPS[key];
+    });
+    // Apply tooltips to stair steps
+    document.querySelectorAll('.stair').forEach(el => {
+        const label = el.querySelector('.stair-label')?.textContent.trim();
+        const stairTips = {
+            'Tab Complete':           '① O básico. Copilot, Codeium, TabNine — autocomplete que sugere a próxima linha. Você ainda faz 100% das decisões.',
+            'Agent IDE':              '② Cursor, Windsurf, Claude Code — o agente escreve blocos inteiros, mas sem estrutura de projeto. É aqui que vibe coding acontece.',
+            'Context Engineering':    '③ CLAUDE.md, project-context.md, regras de projeto — o agente entende o contexto e não reinventa a roda a cada prompt.',
+            'Compounding Engineering':'④ Cada ciclo melhora o próximo. Memória entre sessões, artefatos incrementais, aprendizado acumulado no repositório.',
+            'MCP & Skills':           '⑤ Skills BMAD (/create-prd, /dev-story), MCPs, ferramentas especializadas — o agente tem superpoderes contextuais.',
+            'Harness Engineering':    '⑥ Guardrails, observabilidade, retry/circuit breakers, segurança — agentes confiáveis em produção. Teto do BMAD.',
+            'Background Agents':      '⑦ Agentes rodando CI/CD, monitoria e deploys sem intervenção humana. Devin, Codex. Além do escopo atual do BMAD.',
+            'Autonomous Agent Teams': '⑧ Times completos de agentes coordenados, auto-organizados, sem supervisão. Ainda é pesquisa, não produção.',
+        };
+        if (label && stairTips[label]) el.dataset.tip = stairTips[label];
+    });
+
+    // Tooltip element
+    const tip = document.createElement('div');
+    tip.id = 'tip';
+    document.body.appendChild(tip);
+    let tipTarget = null;
+
+    document.addEventListener('mouseover', e => {
+        const el = e.target.closest('[data-tip]');
+        if (!el) return;
+        tipTarget = el;
+        const src = el.dataset.src;
+        const srcName = el.dataset.srcName;
+        if (src) {
+            tip.innerHTML = el.dataset.tip + `<span class="tip-src">Fonte: <a href="${src}" target="_blank" rel="noopener">${srcName || 'ver fonte'} ↗</a></span>`;
+            tip.classList.add('has-link');
+        } else {
+            tip.textContent = el.dataset.tip;
+            tip.classList.remove('has-link');
+        }
+        tip.classList.add('vis');
+    });
+    document.addEventListener('mousemove', e => {
+        if (!tip.classList.contains('has-link') || !e.target.closest('#tip')) {
+            const x = e.clientX, y = e.clientY;
+            const tw = tip.offsetWidth, th = tip.offsetHeight;
+            tip.style.left = Math.min(x + 14, innerWidth - tw - 10) + 'px';
+            tip.style.top  = (y - th - 10 < 6 ? y + 16 : y - th - 10) + 'px';
+        }
+    });
+    document.addEventListener('mouseout', e => {
+        const leaving = e.target;
+        const entering = e.relatedTarget;
+        // Don't hide if moving between tip-target and #tip
+        if (leaving.closest('#tip') && entering && entering.closest('[data-tip]') === tipTarget) return;
+        if (leaving.closest('[data-tip]') === tipTarget && entering && entering.closest('#tip')) return;
+        if (leaving.closest('[data-tip]') || leaving.closest('#tip')) {
+            if (!entering || (!entering.closest('[data-tip]') && !entering.closest('#tip'))) {
+                tip.classList.remove('vis', 'has-link');
+                tipTarget = null;
+            }
+        }
+    });
+    // Click on stat with data-src opens source directly
+    document.addEventListener('click', e => {
+        const el = e.target.closest('[data-src]');
+        if (el && el.dataset.src) window.open(el.dataset.src, '_blank');
+    });
+    </script>
+</body>
+</html>
