@@ -711,14 +711,18 @@
         ══════════════════════════════ */
         @media (max-width: 768px) {
             /* Global */
-            body { overflow: hidden; }
+            body { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
+            .slides-wrapper { position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
             .slide {
                 padding: 20px 20px 90px;
-                height: 100%; overflow-y: auto; overflow-x: hidden;
+                position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+                height: auto; min-height: 100%;
+                overflow-y: auto; overflow-x: hidden;
                 justify-content: flex-start;
                 -webkit-overflow-scrolling: touch;
+                touch-action: pan-y;
             }
-            .slide.centered { justify-content: flex-start; padding-top: 40px; }
+            .slide.centered { justify-content: flex-start; padding-top: 30px; }
             .title { font-size: 2.2rem; letter-spacing: -1px; margin-bottom: 16px; }
             .label { font-size: 0.6rem; letter-spacing: 3px; }
 
@@ -815,9 +819,10 @@
             #s9::before { width: 350px; height: 350px; }
 
             /* Nav pill */
-            .nav-pill { padding: 6px 12px; gap: 8px; bottom: 12px; }
+            .nav-pill { padding: 6px 12px; gap: 8px; bottom: 10px; z-index: 2000; }
             .nav-btn { font-size: 0.7rem; padding: 3px 8px; }
             .nav-dot { width: 5px; height: 5px; }
+            .progress-line { z-index: 2000; }
 
             /* Tooltip */
             #tip { max-width: 200px; font-size: 0.68rem; }
