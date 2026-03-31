@@ -1819,13 +1819,6 @@
         })
         .subscribe();
 
-    // Polling fallback every 8s (in case broadcast misses)
-    setInterval(async () => {
-        try {
-            const { data } = await supaClient.from('perguntas').select('*').eq('visivel', true).gt('id', lastQAId).order('created_at', { ascending: true });
-            if (data && data.length) data.forEach(p => { if (p.id > lastQAId) { lastQAId = p.id; addQAItem(p); } });
-        } catch(e) {}
-    }, 8000);
 
     // Toggle with Q key
     document.addEventListener('keydown', e => {
