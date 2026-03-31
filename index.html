@@ -711,7 +711,14 @@
         ══════════════════════════════ */
         @media (max-width: 768px) {
             /* Global */
-            .slide { padding: 24px 20px 80px; }
+            body { overflow: hidden; }
+            .slide {
+                padding: 20px 20px 90px;
+                height: 100%; overflow-y: auto; overflow-x: hidden;
+                justify-content: flex-start;
+                -webkit-overflow-scrolling: touch;
+            }
+            .slide.centered { justify-content: flex-start; padding-top: 40px; }
             .title { font-size: 2.2rem; letter-spacing: -1px; margin-bottom: 16px; }
             .label { font-size: 0.6rem; letter-spacing: 3px; }
 
