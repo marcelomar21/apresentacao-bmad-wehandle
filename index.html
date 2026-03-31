@@ -1291,7 +1291,7 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
     // ── PARTICLES ──
     (function(){
@@ -1809,22 +1809,22 @@
         }
     })();
 
-    // Listen for new questions in realtime
-    supaClient.channel('perguntas-realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'perguntas' }, payload => {
-            if (payload.new.id > lastQAId) { lastQAId = payload.new.id; addQAItem(payload.new); }
-        })
-        .subscribe((status) => {
-            console.log('Realtime status:', status);
-            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                // Fallback: poll every 10s
-                console.log('Realtime failed, falling back to polling');
-                setInterval(async () => {
-                    const { data } = await supaClient.from('perguntas').select('*').eq('visivel', true).gt('id', lastQAId).order('created_at', { ascending: true });
-                    if (data) data.forEach(p => { lastQAId = p.id; addQAItem(p); });
-                }, 10000);
-            }
-        });
+    // Poll for new questions every 5 seconds
+    setInterval(async () => {
+        try {
+            const { data } = await supaClient.from('perguntas').select('*').eq('visivel', true).gt('id', lastQAId).order('created_at', { ascending: true });
+            if (data && data.length) data.forEach(p => { lastQAId = p.id; addQAItem(p); });
+        } catch(e) {}
+    }, 5000);
+
+    // Also try Realtime as bonus (instant delivery when it works)
+    try {
+        supaClient.channel('perguntas-rt')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'perguntas' }, payload => {
+                if (payload.new.id > lastQAId) { lastQAId = payload.new.id; addQAItem(payload.new); }
+            })
+            .subscribe();
+    } catch(e) {}
 
     // Toggle with Q key
     document.addEventListener('keydown', e => {
