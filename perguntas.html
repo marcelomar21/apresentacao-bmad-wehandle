@@ -76,9 +76,14 @@
         </form>
         <div class="msg" id="msg"></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
         const SUPA_URL = 'https://ubjbawkcqsvumpcxkirb.supabase.co';
         const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViamJhd2tjcXN2dW1wY3hraXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDU0NDIsImV4cCI6MjA4OTU4MTQ0Mn0.JDvG7mPW7vqrAsXzcPhtFwDtO8mOvbUZliHrxXF5gPQ';
+
+        const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+        const channel = supa.channel('meetup-qa');
+        channel.subscribe();
 
         const form = document.getElementById('form');
         const btn = document.getElementById('btn');
@@ -95,16 +100,25 @@
             msg.textContent = '';
 
             try {
+                // Insert in DB
                 const res = await fetch(`${SUPA_URL}/rest/v1/perguntas`, {
                     method: 'POST',
                     headers: {
                         'apikey': SUPA_KEY,
                         'Authorization': `Bearer ${SUPA_KEY}`,
                         'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
                     },
                     body: JSON.stringify({ nome, pergunta })
                 });
                 if (!res.ok) throw new Error('Erro ao enviar');
+                const rows = await res.json();
+                // Broadcast to presentation via Realtime
+                channel.send({
+                    type: 'broadcast',
+                    event: 'nova-pergunta',
+                    payload: rows[0]
+                });
                 msg.className = 'msg ok';
                 msg.textContent = 'Pergunta enviada! Obrigado.';
                 document.getElementById('pergunta').value = '';
