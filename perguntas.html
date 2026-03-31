@@ -146,6 +146,10 @@
             const ids = getVotedIds();
             if (!ids.includes(id)) { ids.push(id); localStorage.setItem('voted_perguntas', JSON.stringify(ids)); }
         }
+        function unmarkVoted(id) {
+            const ids = getVotedIds().filter(v => v !== id);
+            localStorage.setItem('voted_perguntas', JSON.stringify(ids));
+        }
         function hasVoted(id) { return getVotedIds().includes(id); }
 
         // ── Render ──
@@ -170,7 +174,7 @@
                 </div>
                 <div class="q-texto">${p.pergunta}</div>
                 <div class="q-footer">
-                    <button class="q-vote-btn ${voted ? 'voted' : ''}" data-id="${p.id}" ${voted ? 'disabled' : ''}>
+                    <button class="q-vote-btn ${voted ? 'voted' : ''}" data-id="${p.id}">
                         ▲ <span class="q-vote-count">${p.votos || 0}</span>
                     </button>
                 </div>`;
@@ -192,26 +196,31 @@
             sortList();
         }
 
-        // ── Vote click (event delegation) ──
+        // ── Vote toggle (event delegation) ──
         qList.addEventListener('click', async (e) => {
             const btn = e.target.closest('.q-vote-btn');
-            if (!btn || btn.disabled) return;
+            if (!btn || btn.dataset.loading) return;
 
             const id = parseInt(btn.dataset.id);
-            if (hasVoted(id)) return;
+            const alreadyVoted = hasVoted(id);
+            btn.dataset.loading = '1';
 
-            btn.disabled = true;
-            btn.classList.add('voted');
+            const rpcName = alreadyVoted ? 'desvotar_pergunta' : 'votar_pergunta';
+            const { data, error } = await supa.rpc(rpcName, { p_id: id });
+            delete btn.dataset.loading;
 
-            const { data, error } = await supa.rpc('votar_pergunta', { p_id: id });
             if (error) {
                 console.error('Erro ao votar:', error);
-                btn.disabled = false;
-                btn.classList.remove('voted');
                 return;
             }
 
-            markVoted(id);
+            if (alreadyVoted) {
+                unmarkVoted(id);
+                btn.classList.remove('voted');
+            } else {
+                markVoted(id);
+                btn.classList.add('voted');
+            }
             updateVoteUI(id, data);
             channel.send({ type: 'broadcast', event: 'voto-pergunta', payload: { id, votos: data } });
         });
