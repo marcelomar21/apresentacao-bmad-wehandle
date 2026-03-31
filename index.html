@@ -759,7 +759,11 @@
         }
         .qa-del:hover { opacity: 1; }
         .qa-texto { font-size: 0.82rem; color: #ccc; line-height: 1.45; }
-        .qa-time { font-size: 0.55rem; color: #444; margin-top: 6px; }
+        .qa-votos {
+            display: flex; align-items: center; gap: 5px;
+            margin-top: 8px; font-size: 0.65rem; color: #667eea; font-weight: 700;
+        }
+        .qa-time { font-size: 0.55rem; color: #444; margin-top: 4px; }
         .qa-empty { color: #444; font-size: 0.8rem; text-align: center; margin-top: 40px; }
         .qa-qr {
             position: fixed; bottom: 80px; right: 16px; z-index: 2500;
@@ -1809,33 +1813,59 @@
         const list = document.getElementById('qa-list');
         const empty = document.getElementById('qa-empty');
         if (empty) empty.remove();
+        if (document.getElementById('qa-' + p.id)) return;
 
         const div = document.createElement('div');
         div.className = 'qa-item';
+        div.id = 'qa-' + p.id;
+        div.dataset.votos = p.votos || 0;
         const time = new Date(p.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        div.innerHTML = `<div class="qa-nome">${p.nome || 'Anônimo'}<button class="qa-del" onclick="deleteQA(${p.id},this)" title="Excluir">🗑</button></div><div class="qa-texto">${p.pergunta}</div><div class="qa-time">${time}</div>`;
+        div.innerHTML = `<div class="qa-nome">${p.nome || 'Anônimo'}<button class="qa-del" onclick="deleteQA(${p.id},this)" title="Excluir">🗑</button></div><div class="qa-texto">${p.pergunta}</div><div class="qa-votos">▲ <span class="qa-votos-count">${p.votos || 0}</span> votos</div><div class="qa-time">${time}</div>`;
         list.prepend(div);
 
         qaCount++;
         document.getElementById('qa-count').textContent = qaCount;
     }
 
+    function sortQAList() {
+        const list = document.getElementById('qa-list');
+        const items = Array.from(list.querySelectorAll('.qa-item'));
+        items.sort((a, b) => (parseInt(b.dataset.votos) || 0) - (parseInt(a.dataset.votos) || 0));
+        items.forEach(el => list.appendChild(el));
+    }
+
+    function updateQAVote(id, newVotos) {
+        const item = document.getElementById('qa-' + id);
+        if (!item) return;
+        item.dataset.votos = newVotos;
+        const countEl = item.querySelector('.qa-votos-count');
+        if (countEl) countEl.textContent = newVotos;
+        sortQAList();
+    }
+
     // Load existing questions
     (async () => {
-        const { data } = await supaClient.from('perguntas').select('*').order('created_at', { ascending: false });
+        const { data } = await supaClient.from('perguntas').select('*')
+            .order('votos', { ascending: false })
+            .order('created_at', { ascending: false });
         if (data && data.length) {
-            lastQAId = data[0].id;
+            lastQAId = Math.max(...data.map(p => p.id));
             data.reverse().forEach(addQAItem);
+            sortQAList();
         }
     })();
 
-    // Realtime via Broadcast (instant — form sends broadcast on insert)
+    // Realtime via Broadcast
     supaClient.channel('meetup-qa')
         .on('broadcast', { event: 'nova-pergunta' }, ({ payload }) => {
             if (payload && payload.id > lastQAId) {
                 lastQAId = payload.id;
                 addQAItem(payload);
+                sortQAList();
             }
+        })
+        .on('broadcast', { event: 'voto-pergunta' }, ({ payload }) => {
+            if (payload) updateQAVote(payload.id, payload.votos);
         })
         .subscribe();
 

@@ -57,6 +57,54 @@
         }
         .msg.ok { color: #7de87d; }
         .msg.err { color: #ff6666; }
+        /* Question list with votes */
+        .questions-section {
+            margin-top: 28px;
+            border-top: 1px solid rgba(102,126,234,0.15);
+            padding-top: 20px;
+        }
+        .questions-title {
+            font-size: 0.75rem; color: #888; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+        .q-list { display: flex; flex-direction: column; gap: 10px; }
+        .q-card {
+            padding: 12px 14px;
+            background: rgba(102,126,234,0.06);
+            border: 1px solid rgba(102,126,234,0.12);
+            border-radius: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .q-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .q-nome { font-size: 0.7rem; font-weight: 700; color: #f093fb; }
+        .q-time { font-size: 0.55rem; color: #444; }
+        .q-texto { font-size: 0.82rem; color: #ccc; line-height: 1.45; margin-bottom: 8px; }
+        .q-footer { display: flex; align-items: center; }
+        .q-vote-btn {
+            background: rgba(102,126,234,0.1);
+            border: 1px solid rgba(102,126,234,0.2);
+            border-radius: 8px; padding: 4px 10px;
+            color: #667eea; font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 4px;
+            width: auto;
+        }
+        .q-vote-btn:hover:not(.voted) { background: rgba(102,126,234,0.2); border-color: rgba(102,126,234,0.4); }
+        .q-vote-btn.voted {
+            background: rgba(102,126,234,0.25);
+            border-color: rgba(102,126,234,0.5);
+            color: #a0b0ff;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
@@ -75,6 +123,12 @@
             <button type="submit" id="btn">Enviar pergunta</button>
         </form>
         <div class="msg" id="msg"></div>
+        <div class="questions-section">
+            <div class="questions-title">Perguntas da plateia</div>
+            <div class="q-list" id="q-list">
+                <div class="q-empty" id="q-empty" style="color:#444;font-size:0.8rem;text-align:center;margin-top:16px">Nenhuma pergunta ainda...</div>
+            </div>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
@@ -83,10 +137,106 @@
 
         const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         const channel = supa.channel('meetup-qa');
-        channel.subscribe();
 
+        // ── localStorage anti-spam ──
+        function getVotedIds() {
+            try { return JSON.parse(localStorage.getItem('voted_perguntas') || '[]'); } catch { return []; }
+        }
+        function markVoted(id) {
+            const ids = getVotedIds();
+            if (!ids.includes(id)) { ids.push(id); localStorage.setItem('voted_perguntas', JSON.stringify(ids)); }
+        }
+        function hasVoted(id) { return getVotedIds().includes(id); }
+
+        // ── Render ──
+        const qList = document.getElementById('q-list');
+        const qEmpty = document.getElementById('q-empty');
+
+        function renderQuestion(p) {
+            if (qEmpty) qEmpty.remove();
+            if (document.getElementById('q-' + p.id)) return;
+
+            const div = document.createElement('div');
+            div.className = 'q-card';
+            div.id = 'q-' + p.id;
+            div.dataset.votos = p.votos || 0;
+
+            const time = new Date(p.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const voted = hasVoted(p.id);
+            div.innerHTML = `
+                <div class="q-header">
+                    <span class="q-nome">${p.nome || 'Anônimo'}</span>
+                    <span class="q-time">${time}</span>
+                </div>
+                <div class="q-texto">${p.pergunta}</div>
+                <div class="q-footer">
+                    <button class="q-vote-btn ${voted ? 'voted' : ''}" data-id="${p.id}" ${voted ? 'disabled' : ''}>
+                        ▲ <span class="q-vote-count">${p.votos || 0}</span>
+                    </button>
+                </div>`;
+            qList.appendChild(div);
+        }
+
+        function sortList() {
+            const items = Array.from(qList.querySelectorAll('.q-card'));
+            items.sort((a, b) => (parseInt(b.dataset.votos) || 0) - (parseInt(a.dataset.votos) || 0));
+            items.forEach(el => qList.appendChild(el));
+        }
+
+        function updateVoteUI(id, newVotos) {
+            const card = document.getElementById('q-' + id);
+            if (!card) return;
+            card.dataset.votos = newVotos;
+            const countEl = card.querySelector('.q-vote-count');
+            if (countEl) countEl.textContent = newVotos;
+            sortList();
+        }
+
+        // ── Vote click (event delegation) ──
+        qList.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.q-vote-btn');
+            if (!btn || btn.disabled) return;
+
+            const id = parseInt(btn.dataset.id);
+            if (hasVoted(id)) return;
+
+            btn.disabled = true;
+            btn.classList.add('voted');
+
+            const { data, error } = await supa.rpc('votar_pergunta', { p_id: id });
+            if (error) {
+                console.error('Erro ao votar:', error);
+                btn.disabled = false;
+                btn.classList.remove('voted');
+                return;
+            }
+
+            markVoted(id);
+            updateVoteUI(id, data);
+            channel.send({ type: 'broadcast', event: 'voto-pergunta', payload: { id, votos: data } });
+        });
+
+        // ── Load existing questions ──
+        (async () => {
+            const { data } = await supa.from('perguntas').select('*')
+                .order('votos', { ascending: false })
+                .order('created_at', { ascending: false });
+            if (data && data.length) data.forEach(renderQuestion);
+        })();
+
+        // ── Realtime ──
+        channel
+            .on('broadcast', { event: 'nova-pergunta' }, ({ payload }) => {
+                if (payload) { renderQuestion(payload); sortList(); }
+            })
+            .on('broadcast', { event: 'voto-pergunta' }, ({ payload }) => {
+                if (payload) updateVoteUI(payload.id, payload.votos);
+            })
+            .subscribe();
+
+        // ── Form submit ──
         const form = document.getElementById('form');
-        const btn = document.getElementById('btn');
+        const btnSubmit = document.getElementById('btn');
         const msg = document.getElementById('msg');
 
         form.addEventListener('submit', async e => {
@@ -95,12 +245,11 @@
             const pergunta = document.getElementById('pergunta').value.trim();
             if (!pergunta) return;
 
-            btn.disabled = true;
-            btn.textContent = 'Enviando...';
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Enviando...';
             msg.textContent = '';
 
             try {
-                // Insert in DB
                 const res = await fetch(`${SUPA_URL}/rest/v1/perguntas`, {
                     method: 'POST',
                     headers: {
@@ -113,12 +262,9 @@
                 });
                 if (!res.ok) throw new Error('Erro ao enviar');
                 const rows = await res.json();
-                // Broadcast to presentation via Realtime
-                channel.send({
-                    type: 'broadcast',
-                    event: 'nova-pergunta',
-                    payload: rows[0]
-                });
+                channel.send({ type: 'broadcast', event: 'nova-pergunta', payload: rows[0] });
+                renderQuestion(rows[0]);
+                sortList();
                 msg.className = 'msg ok';
                 msg.textContent = 'Pergunta enviada! Obrigado.';
                 document.getElementById('pergunta').value = '';
@@ -126,8 +272,8 @@
                 msg.className = 'msg err';
                 msg.textContent = 'Erro ao enviar. Tente novamente.';
             }
-            btn.disabled = false;
-            btn.textContent = 'Enviar pergunta';
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Enviar pergunta';
         });
     </script>
 </body>
