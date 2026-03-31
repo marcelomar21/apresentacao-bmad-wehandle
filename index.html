@@ -757,13 +757,13 @@
         .qa-empty { color: #444; font-size: 0.8rem; text-align: center; margin-top: 40px; }
         .qa-qr {
             position: fixed; bottom: 80px; right: 16px; z-index: 2500;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            text-decoration: none; opacity: 0.5; transition: opacity 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            text-decoration: none; opacity: 0.6; transition: opacity 0.2s;
         }
         .qa-qr:hover { opacity: 1; }
-        .qa-qr img { border-radius: 6px; border: 1px solid rgba(125,232,125,0.2); }
+        .qa-qr img { border-radius: 8px; border: 2px solid rgba(125,232,125,0.25); }
         .qa-qr span {
-            font-size: 0.5rem; color: #7de87d; font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.55rem; color: #7de87d; font-family: 'Space Grotesk', sans-serif;
             font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
         }
         .qa-badge {
@@ -1277,7 +1277,7 @@
 
     <!-- Q&A Floating QR + Badge -->
     <a href="https://marcelomar21.github.io/apresentacao-bmad-wehandle/perguntas.html" target="_blank" id="qa-qr" class="qa-qr">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https://marcelomar21.github.io/apresentacao-bmad-wehandle/perguntas.html&bgcolor=0a0a15&color=7de87d" width="50" height="50" alt="QR">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://marcelomar21.github.io/apresentacao-bmad-wehandle/perguntas.html&bgcolor=0a0a15&color=7de87d" width="80" height="80" alt="QR">
         <span>Perguntas</span>
     </a>
     <div class="qa-badge" id="qa-badge" onclick="toggleQA()">Q&A <span class="qa-count" id="qa-count">0</span></div>
@@ -1779,6 +1779,7 @@
 
     const supaClient = supabase.createClient(SUPA_URL, SUPA_KEY);
     let qaCount = 0;
+    let lastQAId = 0;
 
     function toggleQA() {
         document.getElementById('qa-panel').classList.toggle('open');
@@ -1802,15 +1803,28 @@
     // Load existing questions
     (async () => {
         const { data } = await supaClient.from('perguntas').select('*').eq('visivel', true).order('created_at', { ascending: false });
-        if (data) data.reverse().forEach(addQAItem);
+        if (data && data.length) {
+            lastQAId = data[0].id;
+            data.reverse().forEach(addQAItem);
+        }
     })();
 
     // Listen for new questions in realtime
     supaClient.channel('perguntas-realtime')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'perguntas' }, payload => {
-            addQAItem(payload.new);
+            if (payload.new.id > lastQAId) { lastQAId = payload.new.id; addQAItem(payload.new); }
         })
-        .subscribe();
+        .subscribe((status) => {
+            console.log('Realtime status:', status);
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                // Fallback: poll every 10s
+                console.log('Realtime failed, falling back to polling');
+                setInterval(async () => {
+                    const { data } = await supaClient.from('perguntas').select('*').eq('visivel', true).gt('id', lastQAId).order('created_at', { ascending: true });
+                    if (data) data.forEach(p => { lastQAId = p.id; addQAItem(p); });
+                }, 10000);
+            }
+        });
 
     // Toggle with Q key
     document.addEventListener('keydown', e => {
