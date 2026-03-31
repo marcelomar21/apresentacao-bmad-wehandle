@@ -705,6 +705,116 @@
         .qr-name { font-size: 0.95rem; font-weight: 700; color: white; }
         .qr-sub  { font-size: 0.67rem; color: var(--purple); text-transform: uppercase; letter-spacing: 2px; }
         .thanks-footer { font-size: 0.82rem; color: var(--muted); }
+
+        /* ══════════════════════════════
+           MOBILE RESPONSIVE
+        ══════════════════════════════ */
+        @media (max-width: 768px) {
+            /* Global */
+            .slide { padding: 24px 20px 80px; }
+            .title { font-size: 2.2rem; letter-spacing: -1px; margin-bottom: 16px; }
+            .label { font-size: 0.6rem; letter-spacing: 3px; }
+
+            /* Slide 1 */
+            .intro-title { font-size: 5rem !important; letter-spacing: -4px !important; }
+            .intro-sub { font-size: 0.85rem; }
+            .intro-eyebrow { font-size: 0.45rem; letter-spacing: 3px; }
+            .intro-badge { font-size: 0.7rem; padding: 8px 18px; margin-top: 30px; }
+
+            /* Slide 2 */
+            .two-col { grid-template-columns: 1fr !important; gap: 16px; }
+            .bmad-desc { font-size: 0.82rem; }
+            .stats-2x2 { gap: 8px; }
+            .stats-2x2 .n { font-size: 1.6rem; }
+            .agents-grid-4 { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+            .ag .ic { font-size: 1.2rem; }
+            .ag .nm { font-size: 0.55rem; }
+            .karpathy { font-size: 0.75rem; padding: 12px; }
+            .scale-box { padding: 10px 14px; }
+            .scale-box p { font-size: 0.72rem; }
+
+            /* Slide 3 */
+            #s3 .title { font-size: 1.8rem !important; }
+            .wf-grid-3 { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+            .wf-card { padding: 10px 12px !important; }
+            .wf-head { gap: 6px; }
+            .wf-icon { font-size: 0.9rem; }
+            .wf-name { font-size: 0.72rem; }
+            .wf-tag { font-size: 0.52rem; padding: 2px 5px; }
+            .wf-footer { font-size: 0.55rem; margin-top: 6px; padding-top: 5px; }
+
+            /* Slide 4 */
+            .fw-grid { grid-template-columns: 1fr !important; gap: 10px; max-width: 100% !important; }
+            .fw-card { padding: 16px; }
+            .fw-name { font-size: 1.1rem; }
+            .fw-desc { font-size: 0.78rem; }
+
+            /* Slide 5 — staircase */
+            .staircase-v2 { gap: 4px; max-width: 100%; }
+            .stair { width: 100% !important; height: 34px; padding: 0 10px; }
+            .stair-8 { margin-left: 0 !important; }
+            .stair-7 { margin-left: 0 !important; }
+            .stair-6 { margin-left: 0 !important; }
+            .stair-5 { margin-left: 0 !important; }
+            .stair-4 { margin-left: 0 !important; }
+            .stair-3 { margin-left: 0 !important; }
+            .stair-2 { margin-left: 0 !important; }
+            .stair-1 { margin-left: 0 !important; }
+            .stair-label { font-size: 0.7rem; }
+            .stair-badge { font-size: 0.5rem; padding: 2px 5px; }
+            .levels-footer { font-size: 0.8rem; }
+
+            /* Slide 6 — harness */
+            .harness-cols { grid-template-columns: 1fr !important; gap: 20px; }
+            .big-quote { font-size: 0.82rem; padding: 14px 16px; }
+            .big-quote .qauthor { font-size: 0.65rem; }
+            .not-item { font-size: 0.75rem; padding: 7px 10px; }
+            .is-grid-2 { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .is-card { padding: 12px; }
+            .is-card h4 { font-size: 0.75rem; }
+            .is-card p { font-size: 0.68rem; }
+
+            /* Slide 7 — evolution */
+            .evo-grid { grid-template-columns: 1fr !important; gap: 12px; }
+            .evo-col { padding: 18px 16px; }
+            .evo-title { font-size: 1.25rem; margin-bottom: 10px; }
+            .evo-stats { gap: 7px; }
+            .evo-val { font-size: 1rem; min-width: 50px; }
+            .evo-lbl { font-size: 0.7rem; }
+            .evo-src { font-size: 0.52rem; }
+            #s7 .title { font-size: 1.8rem !important; }
+
+            /* Slide 8 — terminal + doc */
+            #s8 .title { font-size: 2rem !important; }
+            #s8 > div > div:last-child { grid-template-columns: 1fr !important; gap: 14px; }
+            .terminal { min-height: auto !important; }
+            #t8-body { max-height: 200px; }
+            .doc-preview { min-height: 200px !important; }
+            .doc-tab { font-size: 0.58rem; padding: 6px 12px; }
+            .doc-body { font-size: 0.6rem; padding: 10px 14px; }
+            .doc-body .dh1 { font-size: 0.72rem; }
+            .doc-body .dh2 { font-size: 0.65rem; }
+            .doc-body .dtbl { font-size: 0.55rem; }
+            .doc-body .dscore { font-size: 0.9rem; }
+
+            /* Slide 9 — obrigado */
+            .thanks-title { font-size: 4rem; letter-spacing: -3px; }
+            .thanks-sub { font-size: 0.8rem; }
+            .qr-row { flex-direction: row; gap: 10px; flex-wrap: wrap; justify-content: center; }
+            .qr-card { padding: 12px; min-width: 0; }
+            .qr-card img { width: 80px !important; height: 80px !important; }
+            .qr-name { font-size: 0.72rem; }
+            .qr-sub { font-size: 0.52rem; }
+            #s9::before { width: 350px; height: 350px; }
+
+            /* Nav pill */
+            .nav-pill { padding: 6px 12px; gap: 8px; bottom: 12px; }
+            .nav-btn { font-size: 0.7rem; padding: 3px 8px; }
+            .nav-dot { width: 5px; height: 5px; }
+
+            /* Tooltip */
+            #tip { max-width: 200px; font-size: 0.68rem; }
+        }
     </style>
 </head>
 <body>
