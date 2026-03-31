@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perguntas — BMAD Meetup</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #07070f; color: #e0e0e0;
+            min-height: 100vh; display: flex;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(102,126,234,0.2);
+            border-radius: 20px; padding: 36px 32px;
+            max-width: 420px; width: 100%;
+        }
+        .logo {
+            font-size: 2.2rem; font-weight: 700; text-align: center;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 4px;
+        }
+        .sub { text-align: center; color: #555; font-size: 0.8rem; margin-bottom: 28px; }
+        label { font-size: 0.75rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 6px; }
+        input, textarea {
+            width: 100%; padding: 12px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(102,126,234,0.15);
+            border-radius: 10px; color: #e0e0e0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem; outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus { border-color: rgba(102,126,234,0.5); }
+        textarea { resize: vertical; min-height: 100px; }
+        .field { margin-bottom: 18px; }
+        button {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none; border-radius: 12px;
+            color: white; font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+        }
+        button:hover { opacity: 0.9; }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .msg {
+            text-align: center; margin-top: 16px;
+            font-size: 0.85rem; min-height: 1.2em;
+        }
+        .msg.ok { color: #7de87d; }
+        .msg.err { color: #ff6666; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">BMAD</div>
+        <div class="sub">Meetup IA · WeHandle · Q1 2026</div>
+        <form id="form">
+            <div class="field">
+                <label>Seu nome</label>
+                <input type="text" id="nome" placeholder="Como quer ser chamado?" maxlength="50">
+            </div>
+            <div class="field">
+                <label>Sua pergunta</label>
+                <textarea id="pergunta" placeholder="O que você quer saber?" maxlength="500" required></textarea>
+            </div>
+            <button type="submit" id="btn">Enviar pergunta</button>
+        </form>
+        <div class="msg" id="msg"></div>
+    </div>
+    <script>
+        const SUPA_URL = 'https://ubjbawkcqsvumpcxkirb.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViamJhd2tjcXN2dW1wY3hraXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDU0NDIsImV4cCI6MjA4OTU4MTQ0Mn0.JDvG7mPW7vqrAsXzcPhtFwDtO8mOvbUZliHrxXF5gPQ';
+
+        const form = document.getElementById('form');
+        const btn = document.getElementById('btn');
+        const msg = document.getElementById('msg');
+
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value.trim() || 'Anônimo';
+            const pergunta = document.getElementById('pergunta').value.trim();
+            if (!pergunta) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+            msg.textContent = '';
+
+            try {
+                const res = await fetch(`${SUPA_URL}/rest/v1/perguntas`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPA_KEY,
+                        'Authorization': `Bearer ${SUPA_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ nome, pergunta })
+                });
+                if (!res.ok) throw new Error('Erro ao enviar');
+                msg.className = 'msg ok';
+                msg.textContent = 'Pergunta enviada! Obrigado.';
+                document.getElementById('pergunta').value = '';
+            } catch (err) {
+                msg.className = 'msg err';
+                msg.textContent = 'Erro ao enviar. Tente novamente.';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Enviar pergunta';
+        });
+    </script>
+</body>
+</html>
