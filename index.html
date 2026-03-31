@@ -1196,11 +1196,7 @@
         s5: createCarousel('s5', '.stair', 2500, '.staircase-v2', true),
     };
 
-    // ── SLIDE ANIMATIONS (8 & 9) ──
-    const animState = { s8: 'idle' };
-    const animTimers = { s8: [] };
-
-    function at8(ms, fn) { animTimers.s8.push(setTimeout(fn, ms)); }
+    // ── SLIDE 8 ANIMATION ──
 
     function addLine(body, html) {
         const s = document.createElement('span');
@@ -1213,8 +1209,8 @@
 
 
     function resetSlide8() {
-        animTimers.s8.forEach(clearTimeout); animTimers.s8 = [];
-        animState.s8 = 'idle';
+        s8Timers.forEach(clearTimeout); s8Timers = [];
+        s8Stage = -1; s8Auto = false;
         const b = document.getElementById('t8-body');
         if (b) b.innerHTML = '';
         const fn = document.getElementById('doc-filename');
@@ -1223,190 +1219,172 @@
         if (bd) bd.innerHTML = '<span style="color:#555">O artefato gerado aparece aqui...</span>';
     }
 
-    // Doc preview content for each step
-    const DOCS = {
-        prd: { file: 'prd.md — 24KB', html: `<div class="dh1"># PRD — Painel Admin</div>
-<div class="dmeta">status: approved · type: SaaS · priority: P0</div>
-<div class="dh2">## Classification</div>
-<table class="dtbl"><tr><th>Attribute</th><th>Value</th></tr>
-<tr><td>Type</td><td>SaaS Multi-tenant</td></tr>
-<tr><td>Complexity</td><td>High (brownfield)</td></tr>
-<tr><td>Users</td><td>Admin + End Users</td></tr></table>
-<div class="dh2">## Functional Requirements</div>
-<div class="dfr">FR1: Dashboard com métricas em tempo real</div>
-<div class="dfr">FR2: CRUD de usuários com RBAC</div>
-<div class="dfr">FR3: Sistema de billing recorrente</div>
-<div class="dfr">FR4: Webhooks com retry automático</div>
-<div class="dmeta">... 54 requisitos adicionais</div>
-<div class="dh2">## Non-Functional Requirements</div>
-<div>NFR1: Latência &lt; 200ms (p95)</div>
-<div>NFR2: RLS em 100% das queries</div>` },
+    // ── SLIDE 8: STAGE-BASED ANIMATION ──
+    const P  = (c) => `<span class="t-prompt">~/painel$</span> <span class="t-cmd">${c}</span>`;
+    const AG = (n,t) => `  <span style="color:#f093fb;font-weight:600">${n}:</span> <span style="color:#aaa">${t}</span>`;
+    const OK = (t) => `  <span style="color:#7de87d">✓</span> ${t}`;
+    const SP = (t) => `  <span style="color:#667eea">◉</span> <span style="color:#888">${t}</span>`;
+    const HM = (t) => `  <span style="color:#555">→</span> <span style="color:#bbb">${t}</span>`;
+    const HL = (t) => `  <span style="color:#a78bfa;font-weight:600">${t}</span>`;
 
-        arch: { file: 'architecture.md — 42KB', html: `<div class="dh1"># Architecture — Painel Admin</div>
-<div class="dmeta">status: approved · stack: Next.js + Supabase</div>
-<div class="dh2">## Technical Decisions</div>
-<table class="dtbl"><tr><th>Decision</th><th>Choice</th><th>Rationale</th></tr>
-<tr><td>Auth</td><td>Supabase Auth</td><td>RLS nativo</td></tr>
-<tr><td>DB</td><td>PostgreSQL</td><td>RLS + JSONB</td></tr>
-<tr><td>Deploy</td><td>Vercel + Render</td><td>Edge + Workers</td></tr></table>
-<div class="dh2">## Multi-tenant Pattern</div>
-<div class="dh3">### RLS Policy</div>
-<div style="color:#a78bfa">CREATE POLICY tenant_isolation</div>
-<div style="color:#a78bfa">  USING (group_id = current_setting(</div>
-<div style="color:#a78bfa">    'app.current_tenant')::uuid);</div>` },
+    const S8_STAGES = [
+      { doc: 'prd', file: 'prd.md — 24KB', delays: [0,400,1000,1500,2100,2300], lines: [
+        P('/bmad-create-prd'),
+        AG('PM (John)','Qual o problema que o produto resolve?'),
+        HM('"Painel admin multi-tenant com billing"'),
+        SP('Estruturando 58 requisitos...'),
+        OK('<span style="color:#ddd">prd.md</span> — 24KB · 58 FR · 22 NFR'),
+        ''
+      ], docAt: 4, html: `<div class="dh1"># PRD — Painel Admin</div><div class="dmeta">status: approved · type: SaaS · priority: P0</div><div class="dh2">## Classification</div><table class="dtbl"><tr><th>Attribute</th><th>Value</th></tr><tr><td>Type</td><td>SaaS Multi-tenant</td></tr><tr><td>Complexity</td><td>High (brownfield)</td></tr><tr><td>Users</td><td>Admin + End Users</td></tr></table><div class="dh2">## Functional Requirements</div><div class="dfr">FR1: Dashboard com métricas em tempo real</div><div class="dfr">FR2: CRUD de usuários com RBAC</div><div class="dfr">FR3: Sistema de billing recorrente</div><div class="dfr">FR4: Webhooks com retry automático</div><div class="dmeta">... 54 requisitos adicionais</div><div class="dh2">## Non-Functional Requirements</div><div>NFR1: Latência &lt; 200ms (p95)</div><div>NFR2: RLS em 100% das queries</div>` },
 
-        epics: { file: 'epics.md — 6 épicos · 26 stories', html: `<div class="dh1"># Epics & Stories</div>
-<div class="dmeta">frsCovered: 58/58 · storyCount: 26</div>
-<div class="dh2">## Epic 1: Multi-tenant + RLS</div>
-<div>  Story 1.1: Migration multi-tenant</div>
-<div>  Story 1.2: RLS policies por tabela</div>
-<div>  Story 1.3: Tenant isolation tests</div>
-<div class="dh2">## Epic 2: Auth + RBAC</div>
-<div>  Story 2.1: Login com Supabase Auth</div>
-<div>  Story 2.2: Role-based permissions</div>
-<div class="dh2">## Epic 3: Dashboard</div>
-<div>  Story 3.1: Métricas em tempo real</div>
-<div class="dh2">## Epic 4: Billing</div>
-<div>  Story 4.1: Integração gateway pagamento</div>
-<div class="dmeta">... +2 épicos, 16 stories</div>` },
+      { doc: 'arch', file: 'architecture.md — 42KB', delays: [0,400,1000,1700,1900], lines: [
+        P('/bmad-create-architecture'),
+        AG('Architect (Winston)','Analisando PRD + constraints...'),
+        SP('Definindo stack, RLS policies, patterns...'),
+        OK('<span style="color:#ddd">architecture.md</span> — 42KB · RLS + multi-tenant'),
+        ''
+      ], docAt: 3, html: `<div class="dh1"># Architecture — Painel Admin</div><div class="dmeta">status: approved · stack: Next.js + Supabase</div><div class="dh2">## Technical Decisions</div><table class="dtbl"><tr><th>Decision</th><th>Choice</th><th>Rationale</th></tr><tr><td>Auth</td><td>Supabase Auth</td><td>RLS nativo</td></tr><tr><td>DB</td><td>PostgreSQL</td><td>RLS + JSONB</td></tr><tr><td>Deploy</td><td>Vercel + Render</td><td>Edge + Workers</td></tr></table><div class="dh2">## Multi-tenant Pattern</div><div class="dh3">### RLS Policy</div><div style="color:#a78bfa">CREATE POLICY tenant_isolation</div><div style="color:#a78bfa">  USING (group_id = current_setting(</div><div style="color:#a78bfa">    'app.current_tenant')::uuid);</div>` },
 
-        story: { file: 'story-1.1-migration-multi-tenant.md', html: `<div class="dh1"># Story 1.1: Migration Multi-tenant</div>
-<div class="dmeta">status: done · epicId: 1 · priority: high</div>
-<div class="dh2">## User Story</div>
-<div>As a <span class="dagent">platform admin</span>,</div>
-<div>I want <strong>tenant isolation via RLS</strong>,</div>
-<div>So that <strong>cada tenant vê só seus dados</strong>.</div>
-<div class="dh2">## Acceptance Criteria</div>
-<div><span class="dcheck">✓</span> Given tenant_A, When query, Then só dados de A</div>
-<div><span class="dcheck">✓</span> Given cross-tenant, When access, Then 403</div>
-<div><span class="dcheck">✓</span> Given migration, When rollback, Then zero data loss</div>
-<div class="dh2">## Tasks</div>
-<div><span class="dcheck">✓</span> Criar migration add group_id</div>
-<div><span class="dcheck">✓</span> Criar RLS policies (AC: #1)</div>
-<div><span class="dcheck">✓</span> Testes de isolamento (AC: #2)</div>` },
+      { doc: 'epics', file: 'epics.md — 6 épicos · 26 stories', delays: [0,400,1100,1300], lines: [
+        P('/bmad-create-epics-and-stories'),
+        SP('Mapeando 58 FRs para épicos...'),
+        OK('<span style="color:#ddd">6 épicos</span> · <span style="color:#ddd">26 stories</span> com ACs'),
+        ''
+      ], docAt: 2, html: `<div class="dh1"># Epics & Stories</div><div class="dmeta">frsCovered: 58/58 · storyCount: 26</div><div class="dh2">## Epic 1: Multi-tenant + RLS</div><div>  Story 1.1: Migration multi-tenant</div><div>  Story 1.2: RLS policies por tabela</div><div>  Story 1.3: Tenant isolation tests</div><div class="dh2">## Epic 2: Auth + RBAC</div><div>  Story 2.1: Login com Supabase Auth</div><div>  Story 2.2: Role-based permissions</div><div class="dh2">## Epic 3: Dashboard</div><div>  Story 3.1: Métricas em tempo real</div><div class="dh2">## Epic 4: Billing</div><div>  Story 4.1: Integração gateway pagamento</div><div class="dmeta">... +2 épicos, 16 stories</div>` },
 
-        spec: { file: 'tech-spec-webhook-handler.md', html: `<div class="dh1"># Tech Spec: Webhook Handler</div>
-<div class="dmeta">status: completed · created: 2026-03-15</div>
-<div class="dh2">## Problem Statement</div>
-<div>Webhooks do gateway falham silenciosamente.</div>
-<div class="dh2">## Solution</div>
-<div>Handler idempotente com retry + dead letter queue.</div>
-<div class="dh2">## Files to Modify</div>
-<table class="dtbl"><tr><th>File</th><th>Action</th></tr>
-<tr><td>webhook-handler.js</td><td style="color:#7de87d">NEW</td></tr>
-<tr><td>tenant-isolation.js</td><td style="color:#7de87d">NEW</td></tr>
-<tr><td>routes/index.js</td><td style="color:#febc2e">MODIFY</td></tr></table>
-<div class="dh2">## Technical Decisions</div>
-<div>• Idempotency key: payment_id + event_type</div>
-<div>• Retry: exponential backoff (3 attempts)</div>` },
+      { doc: 'story', file: 'story-1.1-migration-multi-tenant.md', delays: [0,400,1000,1200], lines: [
+        P('/bmad-dev-story story-1.1'),
+        AG('Dev (Amelia)','Lendo ACs e contexto arquitetural...'),
+        OK('Story 1.1 implementada — 3 arquivos · 218 linhas'),
+        ''
+      ], docAt: 2, html: `<div class="dh1"># Story 1.1: Migration Multi-tenant</div><div class="dmeta">status: done · epicId: 1 · priority: high</div><div class="dh2">## User Story</div><div>As a <span class="dagent">platform admin</span>,</div><div>I want <strong>tenant isolation via RLS</strong>,</div><div>So that <strong>cada tenant vê só seus dados</strong>.</div><div class="dh2">## Acceptance Criteria</div><div><span class="dcheck">✓</span> Given tenant_A, When query, Then só dados de A</div><div><span class="dcheck">✓</span> Given cross-tenant, When access, Then 403</div><div><span class="dcheck">✓</span> Given migration, When rollback, Then zero data loss</div><div class="dh2">## Tasks</div><div><span class="dcheck">✓</span> Criar migration add group_id</div><div><span class="dcheck">✓</span> Criar RLS policies (AC: #1)</div><div><span class="dcheck">✓</span> Testes de isolamento (AC: #2)</div>` },
 
-        review: { file: 'code-review-findings.md', html: `<div class="dh1"># Adversarial Code Review</div>
-<div class="dscore">82/100 — Grade A</div>
-<div class="dmeta">reviewer: 3-layer parallel (Blind, Edge Case, Acceptance)</div>
-<div class="dh2">## Findings</div>
-<div><span class="dfail">P1</span> Race condition no webhook retry — fix: mutex por payment_id</div>
-<div><span class="dfail">P2</span> SQL injection em filtro de data — fix: parameterized query</div>
-<div><span class="dcheck">OK</span> RLS policies cobrindo 100% das tabelas</div>
-<div><span class="dcheck">OK</span> Auth middleware aplicado em todas as rotas</div>
-<div><span class="dcheck">OK</span> Error handling com circuit breaker</div>
-<div class="dh2">## Edge Cases Testados</div>
-<div><span class="dcheck">✓</span> Webhook duplicado (idempotency)</div>
-<div><span class="dcheck">✓</span> Tenant deletion mid-request</div>
-<div><span class="dfail">!</span> Timeout em batch > 1000 registros — precisa paginação</div>` },
+      { doc: 'spec', file: 'tech-spec-webhook-handler.md', delays: [0,400,1000,1200], lines: [
+        P('/bmad-quick-dev "webhook handler"'),
+        SP('Gerando tech-spec...'),
+        OK('tech-spec + implementação — 3 arquivos'),
+        ''
+      ], docAt: 2, html: `<div class="dh1"># Tech Spec: Webhook Handler</div><div class="dmeta">status: completed · created: 2026-03-15</div><div class="dh2">## Problem Statement</div><div>Webhooks do gateway falham silenciosamente.</div><div class="dh2">## Solution</div><div>Handler idempotente com retry + dead letter queue.</div><div class="dh2">## Files to Modify</div><table class="dtbl"><tr><th>File</th><th>Action</th></tr><tr><td>webhook-handler.js</td><td style="color:#7de87d">NEW</td></tr><tr><td>tenant-isolation.js</td><td style="color:#7de87d">NEW</td></tr><tr><td>routes/index.js</td><td style="color:#febc2e">MODIFY</td></tr></table><div class="dh2">## Technical Decisions</div><div>• Idempotency key: payment_id + event_type</div><div>• Retry: exponential backoff (3 attempts)</div>` },
 
-        party: { file: 'party-mode — war room session', html: `<div class="dh1"># Party Mode — War Room</div>
-<div class="dmeta">agents: PM, Architect, QA, Security · duration: 12min</div>
-<div class="dh2" style="margin-top:6px">## Sessão ao vivo</div>
-<div><span class="dagent">John (PM):</span> "O webhook precisa ser idempotente — o gateway manda duplicatas."</div>
-<div style="height:4px"></div>
-<div><span class="dagent">Winston (Arch):</span> "Concordo. Sugiro mutex por payment_id + dead letter queue pra falhas persistentes."</div>
-<div style="height:4px"></div>
-<div><span class="dagent">Quinn (QA):</span> "Preciso de um test harness que simule duplicatas em paralelo. Sem isso, não aprovo."</div>
-<div style="height:4px"></div>
-<div><span class="dagent">Security:</span> "O endpoint precisa de rate limiting — 100 req/min por tenant. E validação de assinatura HMAC."</div>
-<div style="height:4px"></div>
-<div><span class="dagent">John (PM):</span> "Adicionando ao PRD: NFR-23 rate limiting, NFR-24 HMAC validation."</div>
-<div style="height:6px"></div>
-<div class="dcheck">✓ 3 decisões · 2 NFRs adicionados · 1 test plan criado</div>` }
-    };
+      { doc: 'review', file: 'code-review-findings.md', delays: [0,400,700,1400,1600], lines: [
+        P('/bmad-code-review'),
+        HL('3 reviewers em paralelo:'),
+        SP('Blind Hunter + Edge Case + Acceptance...'),
+        OK('<span style="color:#7de87d">82/100</span> — 2 P1 encontrados · 5 OK'),
+        ''
+      ], docAt: 3, html: `<div class="dh1"># Adversarial Code Review</div><div class="dscore">82/100 — Grade A</div><div class="dmeta">reviewer: 3-layer parallel (Blind, Edge Case, Acceptance)</div><div class="dh2">## Findings</div><div><span class="dfail">P1</span> Race condition no webhook retry — fix: mutex por payment_id</div><div><span class="dfail">P2</span> SQL injection em filtro de data — fix: parameterized query</div><div><span class="dcheck">OK</span> RLS policies cobrindo 100% das tabelas</div><div><span class="dcheck">OK</span> Auth middleware aplicado em todas as rotas</div><div><span class="dcheck">OK</span> Error handling com circuit breaker</div><div class="dh2">## Edge Cases Testados</div><div><span class="dcheck">✓</span> Webhook duplicado (idempotency)</div><div><span class="dcheck">✓</span> Tenant deletion mid-request</div><div><span class="dfail">!</span> Timeout em batch > 1000 registros — precisa paginação</div>` },
 
-    function showDoc(key) {
-        const d = DOCS[key]; if (!d) return;
+      { doc: 'party', file: 'party-mode — war room session', delays: [0,400,800,1500,1700], lines: [
+        P('/bmad-party-mode'),
+        HL('War Room — 4 agentes debatendo:'),
+        SP('PM + Architect + QA + Security...'),
+        OK('3 decisões · 2 NFRs adicionados'),
+        ''
+      ], docAt: 3, html: `<div class="dh1"># Party Mode — War Room</div><div class="dmeta">agents: PM, Architect, QA, Security · duration: 12min</div><div class="dh2" style="margin-top:6px">## Sessão ao vivo</div><div><span class="dagent">John (PM):</span> "O webhook precisa ser idempotente — o gateway manda duplicatas."</div><div style="height:4px"></div><div><span class="dagent">Winston (Arch):</span> "Concordo. Sugiro mutex por payment_id + dead letter queue pra falhas persistentes."</div><div style="height:4px"></div><div><span class="dagent">Quinn (QA):</span> "Preciso de um test harness que simule duplicatas em paralelo. Sem isso, não aprovo."</div><div style="height:4px"></div><div><span class="dagent">Security:</span> "O endpoint precisa de rate limiting — 100 req/min por tenant. E validação de assinatura HMAC."</div><div style="height:4px"></div><div><span class="dagent">John (PM):</span> "Adicionando ao PRD: NFR-23 rate limiting, NFR-24 HMAC validation."</div><div style="height:6px"></div><div class="dcheck">✓ 3 decisões · 2 NFRs adicionados · 1 test plan criado</div>` }
+    ];
+
+    let s8Stage = -1, s8Auto = false;
+    let s8Timers = [];
+
+    function s8ShowDoc(stage) {
         const fn = document.getElementById('doc-filename');
         const bd = document.getElementById('doc-body');
-        if (fn) fn.textContent = d.file;
-        if (bd) { bd.style.opacity = '0'; setTimeout(() => { bd.innerHTML = d.html; bd.style.opacity = '1'; bd.scrollTop = 0; }, 150); }
+        if (fn) fn.textContent = stage.file;
+        if (bd) { bd.style.opacity = '0'; setTimeout(() => { bd.innerHTML = stage.html; bd.style.opacity = '1'; bd.scrollTop = 0; }, 150); }
     }
 
-    function runSlide8() {
-        if (animState.s8 !== 'idle') return;
-        animState.s8 = 'running';
+    // Render stages 0..upTo in terminal. If animate=true, only last stage animates.
+    function s8Render(upTo, animate) {
         const b = document.getElementById('t8-body');
         if (!b) return;
         b.innerHTML = '';
-
-        const p = (cmd) => `<span class="t-prompt">~/painel$</span> <span class="t-cmd">${cmd}</span>`;
-        const ag= (name, txt) => `  <span style="color:#f093fb;font-weight:600">${name}:</span> <span style="color:#aaa">${txt}</span>`;
-        const ok= (txt) => `  <span style="color:#7de87d">✓</span> ${txt}`;
-        const sp= (txt) => `  <span style="color:#667eea">◉</span> <span style="color:#888">${txt}</span>`;
-        const t = 0;
-
-        // 1. PRD
-        at8(t+100,  () => addLine(b, p('/bmad-create-prd')));
-        at8(t+500,  () => addLine(b, ag('PM (John)', 'Qual o problema que o produto resolve?')));
-        at8(t+1100, () => addLine(b, '  <span style="color:#555">→</span> <span style="color:#bbb">"Painel admin multi-tenant com billing"</span>'));
-        at8(t+1600, () => addLine(b, sp('Estruturando 58 requisitos...')));
-        at8(t+2200, () => { addLine(b, ok('<span style="color:#ddd">prd.md</span> — 24KB · 58 FR · 22 NFR')); showDoc('prd'); });
-        at8(t+2400, () => addLine(b, ''));
-
-        // 2. Architecture
-        at8(t+2800, () => addLine(b, p('/bmad-create-architecture')));
-        at8(t+3200, () => addLine(b, ag('Architect (Winston)', 'Analisando PRD + constraints...')));
-        at8(t+3800, () => addLine(b, sp('Definindo stack, RLS policies, patterns...')));
-        at8(t+4500, () => { addLine(b, ok('<span style="color:#ddd">architecture.md</span> — 42KB · RLS + multi-tenant')); showDoc('arch'); });
-        at8(t+4700, () => addLine(b, ''));
-
-        // 3. Epics & Stories
-        at8(t+5100, () => addLine(b, p('/bmad-create-epics-and-stories')));
-        at8(t+5500, () => addLine(b, sp('Mapeando 58 FRs para épicos...')));
-        at8(t+6200, () => { addLine(b, ok('<span style="color:#ddd">6 épicos</span> · <span style="color:#ddd">26 stories</span> com ACs')); showDoc('epics'); });
-        at8(t+6400, () => addLine(b, ''));
-
-        // 4. Dev Story
-        at8(t+6800, () => addLine(b, p('/bmad-dev-story story-1.1')));
-        at8(t+7200, () => addLine(b, ag('Dev (Amelia)', 'Lendo ACs e contexto arquitetural...')));
-        at8(t+7800, () => { addLine(b, ok('Story 1.1 implementada — 3 arquivos · 218 linhas')); showDoc('story'); });
-        at8(t+8000, () => addLine(b, ''));
-
-        // 5. Quick Dev + Tech Spec
-        at8(t+8400,  () => addLine(b, p('/bmad-quick-dev "webhook handler"')));
-        at8(t+8800,  () => addLine(b, sp('Gerando tech-spec...')));
-        at8(t+9400,  () => { addLine(b, ok('tech-spec + implementação — 3 arquivos')); showDoc('spec'); });
-        at8(t+9600,  () => addLine(b, ''));
-
-        // 6. Code Review (adversarial)
-        at8(t+10000, () => addLine(b, p('/bmad-code-review')));
-        at8(t+10400, () => addLine(b, '  <span style="color:#a78bfa;font-weight:600">3 reviewers em paralelo:</span>'));
-        at8(t+10700, () => addLine(b, sp('Blind Hunter + Edge Case + Acceptance...')));
-        at8(t+11400, () => { addLine(b, ok('<span style="color:#7de87d">82/100</span> — 2 P1 encontrados · 5 OK')); showDoc('review'); });
-        at8(t+11600, () => addLine(b, ''));
-
-        // 7. Party Mode
-        at8(t+12000, () => addLine(b, p('/bmad-party-mode')));
-        at8(t+12400, () => addLine(b, '  <span style="color:#f093fb;font-weight:600">War Room — 4 agentes debatendo:</span>'));
-        at8(t+12800, () => addLine(b, sp('PM + Architect + QA + Security...')));
-        at8(t+13500, () => { addLine(b, ok('3 decisões · 2 NFRs adicionados')); showDoc('party'); });
-        at8(t+13700, () => addLine(b, ''));
-
-        // Cursor final
-        at8(t+14100, () => {
-            const s = document.createElement('span');
-            s.className = 't-out'; s.style.display = 'block';
-            s.innerHTML = `<span class="t-prompt">~/painel$</span> <span class="t-cur"></span>`;
-            b.appendChild(s); b.scrollTop = b.scrollHeight;
-            animState.s8 = 'done';
-        });
+        // Render previous stages instantly
+        for (let i = 0; i <= upTo; i++) {
+            const st = S8_STAGES[i];
+            if (i < upTo || !animate) {
+                st.lines.forEach(l => addLine(b, l));
+            } else {
+                // Animate this stage
+                st.lines.forEach((l, j) => {
+                    const tid = setTimeout(() => {
+                        addLine(b, l);
+                        if (j === st.docAt) s8ShowDoc(st);
+                    }, st.delays[j]);
+                    s8Timers.push(tid);
+                });
+            }
+            if (i < upTo && i === upTo - 1) s8ShowDoc(S8_STAGES[upTo - 1]);
+        }
+        if (!animate) s8ShowDoc(S8_STAGES[upTo]);
     }
+
+    // Auto-play: animate stage by stage
+    function s8AutoNext() {
+        if (!s8Auto) return;
+        s8Stage++;
+        if (s8Stage >= S8_STAGES.length) {
+            // Add cursor at end
+            const b = document.getElementById('t8-body');
+            if (b) {
+                const s = document.createElement('span');
+                s.className = 't-out'; s.style.display = 'block';
+                s.innerHTML = `<span class="t-prompt">~/painel$</span> <span class="t-cur"></span>`;
+                b.appendChild(s);
+                const msg = document.createElement('span');
+                msg.className = 't-out'; msg.style.display = 'block';
+                msg.innerHTML = `<span style="color:#667eea;font-weight:600;font-size:0.95em;margin-top:8px;display:inline-block">Bora tentar simular na prática?</span>`;
+                b.appendChild(msg); b.scrollTop = b.scrollHeight;
+            }
+            s8Auto = false;
+            return;
+        }
+        s8Render(s8Stage, true);
+        // Schedule next stage after last delay + buffer
+        const st = S8_STAGES[s8Stage];
+        const lastDelay = st.delays[st.delays.length - 1];
+        const tid = setTimeout(s8AutoNext, lastDelay + 600);
+        s8Timers.push(tid);
+    }
+
+    function runSlide8() {
+        s8Stage = -1;
+        s8Auto = true;
+        s8AutoNext();
+    }
+
+    // Manual control: up/down arrows on slide 8
+    document.addEventListener('keydown', e => {
+        if (cur !== 7) return; // slide 8 is index 7
+        if (e.key === 'ArrowDown' && e.shiftKey) return;
+        if (e.key === 'ArrowUp' && e.shiftKey) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault(); e.stopPropagation();
+            // Pause auto, advance stage
+            s8Auto = false;
+            s8Timers.forEach(clearTimeout); s8Timers = [];
+            if (s8Stage < S8_STAGES.length - 1) {
+                s8Stage++;
+                s8Render(s8Stage, true);
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault(); e.stopPropagation();
+            // Pause auto, go back
+            s8Auto = false;
+            s8Timers.forEach(clearTimeout); s8Timers = [];
+            if (s8Stage > 0) {
+                s8Stage--;
+                s8Render(s8Stage, false);
+            }
+        } else if (e.key === 'r' || e.key === 'R') {
+            e.preventDefault(); e.stopPropagation();
+            // Resume auto from current stage
+            if (!s8Auto && s8Stage < S8_STAGES.length - 1) {
+                s8Auto = true;
+                s8AutoNext();
+            }
+        }
+    }, true);
 
     // Watch class changes on animated slides
     const animObserver = new MutationObserver(muts => {
