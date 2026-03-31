@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecionando...</title>
+    <style>
+        body { background: #07070f; color: #667eea; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #667eea; margin: 0 3px; animation: pulse 1s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <script>
+        const SUPA_URL = 'https://ubjbawkcqsvumpcxkirb.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViamJhd2tjcXN2dW1wY3hraXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDU0NDIsImV4cCI6MjA4OTU4MTQ0Mn0.JDvG7mPW7vqrAsXzcPhtFwDtO8mOvbUZliHrxXF5gPQ';
+
+        const DESTINATIONS = {
+            bmad: 'https://github.com/bmad-code-org/BMAD-METHOD',
+            apresentacao: 'https://marcelomar21.github.io/apresentacao-bmad-wehandle/',
+            perguntas: 'https://marcelomar21.github.io/apresentacao-bmad-wehandle/perguntas.html',
+            linkedin: 'https://www.linkedin.com/in/marcelo-mendes-8baa6611a/'
+        };
+
+        const params = new URLSearchParams(window.location.search);
+        const qr = params.get('to') || 'apresentacao';
+        const slide = params.get('s') || '';
+        const dest = DESTINATIONS[qr] || DESTINATIONS.apresentacao;
+
+        // Log analytics then redirect
+        fetch(`${SUPA_URL}/rest/v1/analytics`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': `Bearer ${SUPA_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                qr: qr,
+                slide: slide,
+                referrer: document.referrer || null,
+                user_agent: navigator.userAgent
+            })
+        }).finally(() => {
+            window.location.href = dest;
+        });
+
+        // Fallback redirect after 2s in case fetch fails
+        setTimeout(() => { window.location.href = dest; }, 2000);
+    </script>
+</body>
+</html>
